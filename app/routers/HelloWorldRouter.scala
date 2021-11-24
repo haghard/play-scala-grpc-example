@@ -9,8 +9,8 @@ import javax.inject.Inject
 import scala.concurrent.Future
 
 class HelloWorldRouter @Inject()(mat: Materializer, system: ActorSystem)
-  //extends AbstractGreeterServiceRouter2(system) {
-  extends AbstractGreeterServiceRouter(system) {
+  extends AbstractGreeterServiceRouter2(system) {
+  //extends AbstractGreeterServiceRouter(system) {
   
   override def sayHello(in: HelloRequest): Future[HelloReply] =
     Future.successful(HelloReply(s"Hello, ${in.name}!"))
