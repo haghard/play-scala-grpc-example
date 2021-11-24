@@ -1,4 +1,4 @@
-/*
+
 package routers
 
 import akka.actor.ActorSystem
@@ -10,22 +10,27 @@ import play.grpc.internal.PlayRouter
 import scala.concurrent.Future
 
 
-/**
- * Abstract base class for implementing GreeterService and using as a play Router
- */
 abstract class AbstractGreeterServiceRouter2(system: ActorSystem, eHandler: ActorSystem => PartialFunction[Throwable, akka.grpc.Trailers] = defaultMapper)
   extends PlayRouter(GreeterService.name)
   with GreeterService {
 
-  implicit val sys = system
-
   override protected val respond: HttpRequest => Future[HttpResponse] = {
-    sys.log.error("!!!!!!!!!!!!!!!!!!AbstractGreeterServiceRouter2!!!!!!!!!!!!!!!!!!!!")
-    //GreeterServiceHandler(this, GreeterService.name, eHandler)(system)
+    system.log.error("*********AbstractGreeterServiceRouter2*******")
+    //was GreeterServiceHandler(this, GreeterService.name, eHandler)(system)
+
+
+    val serviceHandler =
+      GreeterServiceHandler(this, GreeterService.name, eHandler)(system).asInstanceOf[PartialFunction[HttpRequest, Future[HttpResponse]]]
+
+    /**
+     * https://doc.akka.io/docs/akka-grpc/current/server/reflection.html
+     *
+     * This is how it's done in GreeterServiceHandler.withServerReflection
+     */
     akka.grpc.scaladsl.ServiceHandler.concatOrNotFound(
-      GreeterServiceHandler.partial(this),
-      akka.grpc.scaladsl.ServerReflection.partial(List(GreeterService))
+      serviceHandler,
+      akka.grpc.scaladsl.ServerReflection.partial(List(GreeterService))(system)
     )
   }
 }
-*/
+
