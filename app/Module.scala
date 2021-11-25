@@ -1,4 +1,8 @@
+import akka.http.scaladsl.Http
 import com.google.inject.AbstractModule
+
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 /**
  * This class is a Guice module that tells Guice how to bind several
@@ -11,5 +15,8 @@ import com.google.inject.AbstractModule
  * configuration file.
  */
 class Module extends AbstractModule {
-  override def configure(): Unit = {}
+
+  override def configure(): Unit = {
+
+  }
 }
