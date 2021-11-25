@@ -17,18 +17,14 @@ abstract class AbstractGreeterServiceRouter2(system: ActorSystem, eHandler: Acto
   override protected val respond: HttpRequest => Future[HttpResponse] = {
     system.log.error("*********AbstractGreeterServiceRouter2*******")
     //was GreeterServiceHandler(this, GreeterService.name, eHandler)(system)
-
-
-    val serviceHandler =
-      GreeterServiceHandler(this, GreeterService.name, eHandler)(system).asInstanceOf[PartialFunction[HttpRequest, Future[HttpResponse]]]
-
+    
     /**
      * https://doc.akka.io/docs/akka-grpc/current/server/reflection.html
      *
      * This is how it's done in GreeterServiceHandler.withServerReflection
      */
     akka.grpc.scaladsl.ServiceHandler.concatOrNotFound(
-      serviceHandler,
+      GreeterServiceHandler.partial(this, GreeterService.name, eHandler)(system),
       akka.grpc.scaladsl.ServerReflection.partial(List(GreeterService))(system)
     )
   }
