@@ -8,7 +8,7 @@ import play.api.libs.ws.{ WSClient, WSRequest }
 import play.api.routing.Router
 import play.api.test._
 import play.grpc.specs2.ServerGrpcClient
-import routers.HelloWorldRouter
+import routers.GreeterServiceRouter
 import play.api.Configuration
 import com.typesafe.config.ConfigFactory
 
@@ -17,7 +17,7 @@ class HelloSpecs2Spec extends ForServer with ServerGrpcClient with PlaySpecifica
   protected def applicationFactory: ApplicationFactory =
     withGuiceApp(
       GuiceApplicationBuilder()
-      .overrides(bind[Router].to[HelloWorldRouter])
+      .overrides(bind[Router].to[GreeterServiceRouter])
       .configure(new Configuration(ConfigFactory.parseString("play.filters.hosts.allowed += 0.0.0.0").resolve()))
     )
 

@@ -1,7 +1,7 @@
 package test
 
-import example.myapp.helloworld.grpc.{ GreeterService, GreeterServiceClient, HelloRequest }
-import org.scalatest.concurrent.{ IntegrationPatience, ScalaFutures }
+import example.myapp.helloworld.grpc.{GreeterService, GreeterServiceClient, HelloRequest}
+import org.scalatest.concurrent.{IntegrationPatience, ScalaFutures}
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerTest
 import play.api.Application
@@ -10,13 +10,13 @@ import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.libs.ws.WSClient
 import play.api.routing.Router
 import play.grpc.scalatest.ServerGrpcClient
-import routers.HelloWorldRouter
+import routers.GreeterServiceRouter
 
 class HelloScalaTestSpec extends PlaySpec with GuiceOneServerPerTest with ServerGrpcClient
     with ScalaFutures with IntegrationPatience {
 
   override def fakeApplication(): Application =
-    GuiceApplicationBuilder().overrides(bind[Router].to[HelloWorldRouter]).build()
+    GuiceApplicationBuilder().overrides(bind[Router].to[GreeterServiceRouter]).build()
 
   implicit def ws: WSClient = app.injector.instanceOf(classOf[WSClient])
 

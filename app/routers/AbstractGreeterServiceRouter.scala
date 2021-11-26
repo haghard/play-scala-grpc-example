@@ -10,7 +10,7 @@ import play.grpc.internal.PlayRouter
 import scala.concurrent.Future
 import scala.concurrent.duration.DurationLong
 
-abstract class AbstractGreeterServiceGrpcRouter(system: ActorSystem, eHandler: ActorSystem => PartialFunction[Throwable, akka.grpc.Trailers] = defaultMapper)
+abstract class AbstractGreeterServiceRouter(system: ActorSystem, eHandler: ActorSystem => PartialFunction[Throwable, akka.grpc.Trailers] = defaultMapper)
   extends PlayRouter(GreeterService.name)
     with GreeterService {
 
