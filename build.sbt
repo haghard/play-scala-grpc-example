@@ -12,7 +12,7 @@ lazy val `play-scala-grpc-example` = (project in file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(AkkaGrpcPlugin) // enables source generation for gRPC
   //.enablePlugins(PlayAkkaHttp2Support) // enables serving HTTP/2 and gRPC
-// #grpc_play_plugins
+  // #grpc_play_plugins
     .settings(
       akkaGrpcGeneratedLanguages := Seq(AkkaGrpc.Scala),
       // #grpc_client_generators
@@ -49,10 +49,6 @@ val CompileDeps = Seq(
   "com.typesafe.akka"       %% "akka-discovery"       % PlayVersion.akkaVersion,
   "com.typesafe.akka"       %% "akka-http-spray-json" % akkaHttpVersion,
   "com.typesafe.akka"       %% "akka-http2-support"   % akkaHttpVersion,
-
-  //"ch.qos.logback"          %"logback-classic"        % "1.2.7",
-  //"com.typesafe.akka"       %% "akka-slf4j"            % PlayVersion.akkaVersion,
-
   // Test Database
   "com.h2database" % "h2" % "1.4.200"
 )

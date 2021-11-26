@@ -8,7 +8,6 @@ import example.myapp.helloworld.grpc.{AbstractGreeterServiceRouter, HelloReply, 
 
 import javax.inject.Inject
 import scala.concurrent.Future
-import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
 
 object HelloWorldRouter {
@@ -19,20 +18,17 @@ class HelloWorldRouter @Inject()(mat: Materializer, system: ActorSystem)
   extends AbstractGreeterServiceGrpcRouter(system) {
   //extends AbstractGreeterServiceRouter(system) {
 
-  implicit val as = system
-  implicit val ec = system.dispatcher
-  system.log.warning("★ ★ ★ Starting gRPC server on {}:{} ★ ★ ★", grpcHost, grpcPort)
+  system.log.info("★ ★ ★ Starting gRPC server on {}:{} ★ ★ ★", grpcHost, grpcPort)
 
-  //TODO: Find a proper place to start this
-  Http(system)
+  //TODO: Find a proper place for that
+  Http()
     .newServerAt(interface = grpcHost, port = grpcPort)
     .bind(respond)
-    .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 5.seconds))
+    .map(_.addToCoordinatedShutdown(terminationDeadline))
     .onComplete {
       case Success(binding) =>
         val address = binding.localAddress
-        system.log.warning("★ ★ ★ Stared gRPC server bounded to {}:{} ★ ★ ★", address.getHostString, address.getPort)
-      //println(s"gRPC server bound to ${address.getHostString}:${address.getPort}")
+        system.log.info("★ ★ ★ Stared gRPC server bounded to {}:{} ★ ★ ★", address.getHostString, address.getPort)
       case Failure(ex) =>
         system.log.error(ex, "Failed to bind gRPC endpoint, terminating system")
         CoordinatedShutdown(as).run(HelloWorldRouter.GrpcBoundFailure)
