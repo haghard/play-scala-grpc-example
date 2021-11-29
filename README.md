@@ -25,7 +25,7 @@ These works
 ``` 
    
 
-but calls that relies on the reflection feature  
+but calls that rely on the reflection feature  
 
 ```
    grpcurl -plaintext localhost:8080 list
@@ -33,7 +33,7 @@ but calls that relies on the reflection feature
     
 ```
 
-doesn't.
+do not
 
             
 
