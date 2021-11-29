@@ -16,23 +16,22 @@ I disable https and left http only.
 ```
    
 
-
-
-This works
-
+These works
 
 ```
-   curl http://localhost:8080      
+   curl http://localhost:8080   
+   grpcurl -plaintext -import-path ./play-scala-grpc-example/play-scala-grpc-example/app/protobuf -proto helloworld.proto localhost:8080 helloworld.GreeterService/SayHello
+                  
 ``` 
    
 
-This  
+but calls that relies on the reflection feature  
 
-```grpcurl -plaintext localhost:8080 list```
-
-or
-
-```grpcurl -plaintext localhost:8080 helloworld.GreeterService/SayHello```
+```
+   grpcurl -plaintext localhost:8080 list
+   grpcurl -plaintext localhost:8080 helloworld.GreeterService/SayHello
+    
+```
 
 doesn't.
 
