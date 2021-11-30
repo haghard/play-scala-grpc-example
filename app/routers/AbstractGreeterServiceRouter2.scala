@@ -22,6 +22,7 @@ abstract class AbstractGreeterServiceRouter2(system: ActorSystem, eHandler: Acto
      * https://doc.akka.io/docs/akka-grpc/current/server/reflection.html
      *
      * This is how it's done in GreeterServiceHandler.withServerReflection
+     * Assumption: This doesn't work because GRPC routing happens on the Http2ServerDemux level.
      */
     akka.grpc.scaladsl.ServiceHandler.concatOrNotFound(
       GreeterServiceHandler.partial(this, GreeterService.name, eHandler)(system),
