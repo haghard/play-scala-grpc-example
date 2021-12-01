@@ -6,6 +6,7 @@
 GET        /                 controllers.HomeController.index
 
 # ----     gRPC services    ----
+->        /                  routers.GreeterServiceReflectionRouter
 ->        /                  routers.HelloWorldRouter
 # ---- end of gRPC services ----
 
