@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package carservice;
+
+option java_package = "example.carservice";
+
+message ReserveCarCommand {
+    string reservationId = 1;
+    string userId = 2;
+    string company = 3;
+    string carType = 4;
+}
+
+message CancelCarReservationCommand {
+    string reservationId = 1;
+}
+
+message CarReservation {
+    string reservationId=1;
+    string userId=2;
+    string company=3;
+    string carType=4;
+    bool cancelled=5;
+}
+
+message GetCarReservationCommand {
+    string reservationId = 1;
+}
+
+message Empty {}
+
+service CarBookingService {
+
+    //post
+    rpc ReserveCar(ReserveCarCommand) returns (Empty);
+
+    //post
+    rpc CancelCarReservation(CancelCarReservationCommand) returns (Empty);
+
+    //get
+    rpc GetCarReservation(GetCarReservationCommand) returns (CarReservation);
+}
