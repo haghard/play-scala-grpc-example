@@ -1,3 +1,4 @@
+/*
 package controllers
 
 import com.typesafe.config.Config
@@ -20,3 +21,4 @@ class HomeController @Inject()(greeterServiceClient: GreeterServiceClient, confi
       .map { reply: HelloReply => Ok(reply.message) }
   }
 }
+*/

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+URL=http://127.0.0.1/sayHello                                 # i.e. "http://server.com/my/method" (without quotes)
+REQUEST=example.myapp.helloworld.grpc.HelloRequest            # i.e. "Request"
+RESPONSE=example.myapp.helloworld.grpc.HelloResponse          # i.e. "Response"
+
+
+export REQUEST=HelloRequest            # i.e. "Request"
+export RESPONSE=HelloResponse          # i.e. "Response"
+
+
+PROTO=./app/protobuf/helloworld.proto                         #i.e. "./Protocol.proto"
+export PROTO=/Volumes/dev/projects/yoppworks/NCL/github/play-scala-grpc-example/play-scala-grpc-example/app/protobuf/helloworld.proto
+
+cat proto.msg | protoc --encode $REQUEST $PROTO | curl -sS -X POST --data-binary @- $URL | protoc --decode $RESPONSE $PROTO
