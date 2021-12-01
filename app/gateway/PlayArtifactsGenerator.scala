@@ -18,9 +18,12 @@ object PlayArtifactsGenerator extends App {
   val routesFileName = "routes"
   val Pref = "Service"
   val JavaPackageTag = "java_package"
-
-  //option java_package = "example.myapp.helloworld.grpc";
+  val PackageTag = "package"
+  
+  //option java_package = "example.helloworld.service";
   val JavaPackageExp = s"""option(.*)${JavaPackageTag}(.*)=(.*)""".r
+  //package example.myapp.helloworld.grpc
+  val PackageExp = """package(.*)""".r
 
   //println(s"""★ ★ ★ Main: ${args.mkString(",")} ★ ★ ★""")
 
@@ -38,17 +41,32 @@ object PlayArtifactsGenerator extends App {
         println(s"★ ★ ★ Protobuf schema file: ${schemaFile.getAbsolutePath} ★ ★ ★")
         val javaPackages =
           Using.resource(java.nio.file.Files.newBufferedReader(schemaFile.toPath)) { in =>
-            in.lines().filter(_.contains(JavaPackageTag)).collect(Collectors.toList[String])
+            in.lines().filter { line => !line.contains("""//""") && line.contains(JavaPackageTag) || line.startsWith(PackageTag) }
+              .collect(Collectors.toList[String])
           }.asScala.toSeq
-        javaPackages.headOption
+
+        //http://myregexp.com/
+        val local = javaPackages.size match {
+          case 1 =>
+            javaPackages.head
+          case 2 =>
+            val a = javaPackages.head
+            val b = javaPackages.tail.head
+            println("""option java_package takes precedence over package""")
+            if(a.contains(JavaPackageTag)) a else b
+          case _ =>
+            throw new Exception("Smth's wrong with package definition")
+        }
+        val packageName = local match {
+          case JavaPackageExp(_, _, name) => name.replace("\"", "").replace(";", "").trim
+          case PackageExp(name) => name.replace("\"", "").replace(";", "").trim
+          case _ => throw new Exception("Failed to extract package name.")
+        }
+        Some(packageName)
+
       } else None
 
-    val packageLine = maybePackageName.getOrElse(throw new Exception("Failed to load package name."))
-    val packageName = packageLine match {
-      case JavaPackageExp(_, _, name) => name.replace("\"", "").replace(";", "").trim
-      case _ => throw new Exception("Failed to extract package name.")
-    }
-
+    val packageName = maybePackageName.getOrElse(throw new Exception("Failed to load package name."))
     println(s"★ ★ ★ PackageName: $packageName ★ ★ ★")
 
     val cl = this.getClass.getClassLoader
@@ -75,7 +93,6 @@ object PlayArtifactsGenerator extends App {
     //we support just one service for now
     if(servicesIt.hasNext) {
       val sd = servicesIt.next()
-
       sd.getMethods.forEach { serviceMethod =>
 
         println(s"★ ★ ★ Generating play controller $packageName.$controllerName ★ ★ ★")

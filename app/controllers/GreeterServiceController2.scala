@@ -1,3 +1,4 @@
+/*
 
 package controllers
 
@@ -43,3 +44,4 @@ final class GreeterServiceController2 @Inject()(config: Config, sys: ActorSystem
   }
 }
 
+*/

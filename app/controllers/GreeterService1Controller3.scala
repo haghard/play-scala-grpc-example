@@ -1,3 +1,4 @@
+/*
 package controllers
 
 import com.typesafe.config.Config
@@ -48,3 +49,4 @@ final class GreeterService1Controller3 @Inject()(config: Config)(implicit ec: Ex
   }
 }
 
+*/

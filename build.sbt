@@ -74,6 +74,7 @@ val TestDeps = Seq(
 
 val genPlayArtifacts = taskKey[Unit]("Generate Play artifacts (routes and controllers) using gRPC definition")
 
+// standart Play project paths
 val defaultAppFolder = "./app"
 val defaultConfFolder = "./conf"
 val defaultProtobufFolder = "./app/protobuf"
@@ -81,15 +82,14 @@ val defaultProtobufFolder = "./app/protobuf"
 genPlayArtifacts := Def.taskDyn {
   val Sep = "#"
   val v = scalaVersion.value
-  val subVer = v.substring(0, v.lastIndexOf("."))
+  val majorMinorVer    = v.substring(0, v.lastIndexOf("."))
   val protobufDir      = file(defaultProtobufFolder)
   val confFolder       = file(defaultConfFolder)
-  val appfDir          = file(defaultAppFolder)
-  val classesTargetDir = (target in Compile).value / s"scala-$subVer" / "akka-grpc" / "main"
-
+  val appDir           = file(defaultAppFolder)
+  val classesTargetDir = (target in Compile).value / s"scala-$majorMinorVer" / "akka-grpc" / "main"
   //(runMain in Compile).toTask(s" gateway.Main ${targetDir.absolutePath}").value
   
-  val input = s"${classesTargetDir.absolutePath}${Sep}${protobufDir.absolutePath}${Sep}${appfDir.getAbsolutePath}${Sep}${confFolder.getAbsolutePath}"
+  val input = s"${classesTargetDir.absolutePath}${Sep}${protobufDir.absolutePath}${Sep}${appDir.getAbsolutePath}${Sep}${confFolder.getAbsolutePath}"
   if (classesTargetDir.exists() && protobufDir.exists()) {
     Def.task { (runMain in Compile).toTask(s" gateway.PlayArtifactsGenerator $input").value }
   } else Def.task(println(s"Smth doesn't exists $input"))
