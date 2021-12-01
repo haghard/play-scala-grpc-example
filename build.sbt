@@ -72,8 +72,6 @@ val TestDeps = Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0" % Test,
 )
 
-routesImport += "binders.Binders._"
-
 val genPlayArtifacts = taskKey[Unit]("Generate Play artifacts (routes and controllers) using gRPC definition")
 
 val defaultAppFolder = "./app"
@@ -84,16 +82,16 @@ genPlayArtifacts := Def.taskDyn {
   val Sep = "#"
   val v = scalaVersion.value
   val subVer = v.substring(0, v.lastIndexOf("."))
-  val protobufDir = file(defaultProtobufFolder)
-  val confFolder = file(defaultConfFolder)
-  val appfDir = file(defaultAppFolder)
+  val protobufDir      = file(defaultProtobufFolder)
+  val confFolder       = file(defaultConfFolder)
+  val appfDir          = file(defaultAppFolder)
   val classesTargetDir = (target in Compile).value / s"scala-$subVer" / "akka-grpc" / "main"
+
   //(runMain in Compile).toTask(s" gateway.Main ${targetDir.absolutePath}").value
   
   val input = s"${classesTargetDir.absolutePath}${Sep}${protobufDir.absolutePath}${Sep}${appfDir.getAbsolutePath}${Sep}${confFolder.getAbsolutePath}"
   if (classesTargetDir.exists() && protobufDir.exists()) {
-    //TODO: Wait 
-    Def.task { (runMain in Compile).toTask(s" gateway.Main $input").value }
+    Def.task { (runMain in Compile).toTask(s" gateway.PlayArtifactsGenerator $input").value }
   } else Def.task(println(s"Smth doesn't exists $input"))
 
   /*
