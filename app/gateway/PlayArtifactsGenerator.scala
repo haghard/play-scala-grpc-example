@@ -8,22 +8,22 @@ import scala.util.Using
 import scala.util.control.NonFatal
 import com.google.common.reflect.ClassPath
 
+import java.nio.charset.StandardCharsets
+
 /**
  * Take a look https://github.com/OpenHFT/Java-Runtime-Compiler
  *
  */
-object PlayArtifactsGenerator extends App {
+object PlayArtifactsGenerator extends App with PlayControllerScaffolding with PlayRoutesScaffolding {
   val SEP = "#"
-  val cntPkgName = "controllers"
+  val cntPkgName = "controllers" //
   val routesFileName = "routes"
   val Pref = "Service"
   val JavaPackageTag = "java_package"
   val PackageTag = "package"
 
-  //option java_package = "example.helloworld.service";
-  val JavaPackageExp = s"""option(.*)${JavaPackageTag}(.*)=(.*)""".r
-  //package example.myapp.helloworld.grpc
   val PackageExp = """package(.*)""".r
+  val JavaPackageExp = s"""option(.*)${JavaPackageTag}(.*)=(.*)""".r
 
   //println(s"""★ ★ ★ Main: ${args.mkString(",")} ★ ★ ★""")
 
@@ -52,7 +52,7 @@ object PlayArtifactsGenerator extends App {
             val a = javaPackages.head
             val b = javaPackages.tail.head
             println(""" "option" java_package takes precedence over "package" """)
-            if(a.contains(JavaPackageTag)) a else b
+            if (a.contains(JavaPackageTag)) a else b
           case _ =>
             throw new Exception("Smth's wrong with protobuf package definition")
         }
@@ -89,112 +89,34 @@ object PlayArtifactsGenerator extends App {
     val descriptorMethod = methods.find(_.getName.contains("descriptor")).getOrElse(throw new Exception(s"Couldn't find descriptor on ${serviceInfo.getName}"))
     val fileDescriptor = descriptorMethod.invoke(serviceClass).asInstanceOf[com.google.protobuf.Descriptors.FileDescriptor]
 
+
+    val cBuffer = new StringBuilder()
+    cBuffer.append(cntrHeader(packageName, controllerName))
+
+    val rBuffer = new StringBuilder()
+    rBuffer.append(routesHeader())
+
     val servicesIt = fileDescriptor.getServices.iterator()
-    //we support just one service for now
-    if(servicesIt.hasNext) {
+
+    //we support just one service for the time being
+    if (servicesIt.hasNext) {
       val sd = servicesIt.next()
       sd.getMethods.forEach { serviceMethod =>
-
-        println(s"★ ★ ★ Generating play controller $packageName.$controllerName ★ ★ ★")
-
-        Using.resource(new FileOutputStream(newControllerFile))(_.write(
-            genPlayController(
-              packageName,
-              controllerName,
-              serviceMethod.getName,
-              serviceMethod.getInputType.getName,
-              serviceMethod.getOutputType.getName
-            )
-          ))
-
-        println(s"★ ★ ★ Generating $routesFile ★ ★ ★")
-        Using.resource(new FileOutputStream(routesFile))(_.write(genPlayRoutesFile(controllerName, serviceMethod.getName)))
+        cBuffer.append(cntrlMethod(serviceMethod.getName, serviceMethod.getInputType.getName, serviceMethod.getOutputType.getName))
+        rBuffer.append(routesRoute(controllerName, serviceMethod.getName))
+        println(s"★ ★ ★ Generating a Play controller method $packageName.$controllerName ${serviceMethod.getName} ★ ★ ★")
       }
     }
+
+    cBuffer.append(cntrFooter())
+    rBuffer.append(routesFooter())
+
+    Using.resource(new FileOutputStream(newControllerFile))(_.write(cBuffer.toString().getBytes(StandardCharsets.UTF_8)))
+    Using.resource(new FileOutputStream(routesFile))(_.write(rBuffer.toString().getBytes(StandardCharsets.UTF_8)))
 
   } catch {
     case NonFatal(ex) =>
       println(s" ${ex.getMessage}")
       System.exit(-1)
   }
-
-  private def genPlayRoutesFile(controllerName: String, method: String): Array[Byte] =
-    s"""
-       |# Routes
-       |# This file defines all application routes (Higher priority routes first)
-       |# ~~~~
-       |
-       |# An example controller showing a sample home page
-       |POST     /$method    $cntPkgName.$controllerName.$method()
-       |
-       |# Map static resources from the /public folder to the /assets URL path
-       |GET     /assets/*file        $cntPkgName.Assets.versioned(path="/public", file: Asset)
-       |
-       |""".stripMargin.getBytes
-
-  private def genPlayController(
-    packageName: String, controllerName: String, methodName: String,
-    request: String, response: String
-  ): Array[Byte] =
-    s"""package $cntPkgName
-       |
-       |import com.typesafe.config.Config
-       |
-       |import javax.inject.Inject
-       |import play.api.mvc._
-       |
-       |import ${packageName}._
-       |
-       |import scala.util.control.NonFatal
-       |
-       |import scala.concurrent.{ExecutionContext, Future}
-       |
-       |class ${controllerName} @Inject()(config: Config)(implicit ec: ExecutionContext)
-       |  extends InjectedController {
-       |  /*
-       |  import play.api.data.Forms._
-       |   import play.api.data.Form
-       |  private def form: Form[${request}] = ???
-       |   Form(mapping("name" -> nonEmptyText)(HelloRequest(_))(r => Some(r.name)))
-       |  */
-       |
-       |  private def parse[T <: scalapb.GeneratedMessage with scalapb.Message[T] : scalapb.GeneratedMessageCompanion](req: Request[AnyContent]): Either[String, T] =
-       |    req.body.asJson match {
-       |      case Some(json) =>
-       |        val req: Either[String, T] =
-       |          try Right(scalapb.json4s.JsonFormat.fromJsonString[T](json.toString()))
-       |          catch {
-       |            case NonFatal(ex) => Left(ex.getMessage)
-       |          }
-       |        req
-       |      case None => Left("Empty body")
-       |    }
-       |
-       |  def ${methodName}() = Action.async { implicit req =>
-       |    val f: Future[Result] = Future {
-       |      //val parseResult = form.bindFromRequest()
-       |      //val reply: ${response} = parseResult.fold(???, ???)
-       |
-       |      val reply: ${response} = parse[${request}](req) match {
-       |        case Right(pb) => ${response}("Hello " + pb.toProtoString)
-       |        case Left(error) => ${response}(error)
-       |      }
-       |
-       |      Ok(reply.message)
-       |    }
-       |
-       |    f
-       |  }
-       |}
-       |
-       |""".stripMargin.getBytes
-
 }
-
-/*def sandboxedClassLoader(files: Seq[File]): URLClassLoader = {
-  val cloader = new URLClassLoader(
-    files.map(_.toURI().toURL()).toArray,
-    new FilteringClassLoader(getClass().getClassLoader())
-  )
-  cloader
-}*/

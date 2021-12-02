@@ -10,8 +10,11 @@ service GreeterService {
 
     //post
     rpc sayHello (HelloRequest) returns (HelloReply) {}
-}
 
+    //post
+    rpc sayHello2 (HelloRequest2) returns (HelloReply2) {}
+
+}
 
 message HelloRequest {
     string name=1;
@@ -22,5 +25,15 @@ message HelloReply {
     string message=1;
     int32 age=2;
 }
+
+
+message HelloRequest2 {
+    string name=1;
+}
+
+message HelloReply2 {
+    string message=1;
+}
+
 
 message Empty {}
