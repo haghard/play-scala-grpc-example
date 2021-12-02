@@ -11,7 +11,7 @@ import scala.util.Using
 import scala.util.control.NonFatal
 
 /**
- * Take a look https://github.com/OpenHFT/Java-Runtime-Compiler
+ * 
  *
  */
 object PlayArtifactsGenerator extends App with PlayControllerScaffolding with PlayRoutesScaffolding {
@@ -45,7 +45,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
               .collect(Collectors.toList[String])
           }.asScala.toSeq
 
-        val local = javaPackages.size match {
+        val javaPackagesLine = javaPackages.size match {
           case 1 =>
             javaPackages.head
           case 2 =>
@@ -56,7 +56,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
           case _ =>
             throw new Exception("Smth's wrong with protobuf package definition")
         }
-        val packageName = local match {
+        val packageName = javaPackagesLine match {
           case JavaPackageExp(_, _, name) => name.replace("\"", "").replace(";", "").trim
           case PackageExp(name) => name.replace("\"", "").replace(";", "").trim
           case _ => throw new Exception("Failed to extract package name.")
@@ -82,10 +82,11 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     Files.deleteIfExists(Paths.get(controllerFile))
     Files.deleteIfExists(Paths.get(routesFile))
 
+    //
     val serviceClass = Class.forName(serviceInfo.getName)
     val methods = serviceClass.getMethods
 
-    //example.myapp.helloworld.grpc.GreeterService.descriptor
+    //GreeterService.descriptor
     val descriptorMethod = methods.find(_.getName.contains("descriptor")).getOrElse(throw new Exception(s"Couldn't find descriptor on ${serviceInfo.getName}"))
     val fileDescriptor = descriptorMethod.invoke(serviceClass).asInstanceOf[com.google.protobuf.Descriptors.FileDescriptor]
 
@@ -111,6 +112,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     cBuffer.append(cntrFooter())
     rBuffer.append(routesFooter())
 
+    //TODO: consider writing in chunks
     Using.resource(new FileOutputStream(controllerFile))(_.write(cBuffer.toString().getBytes(StandardCharsets.UTF_8)))
     Using.resource(new FileOutputStream(routesFile))(_.write(rBuffer.toString().getBytes(StandardCharsets.UTF_8)))
 
