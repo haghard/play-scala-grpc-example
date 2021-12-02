@@ -3,7 +3,7 @@
 POC that generates `routes` file and a Play controller from a protobuf definition file.
 
 
-## Now it supppose to work Steps
+## Now it supposed to work. Steps
 
 1. We start with an emply Play project that has support for `play-grpc-generators` and `akka-grpc`.
 2. Invoke
@@ -30,3 +30,6 @@ Software we rely upon
 
 1. `play-grpc-generators` and `akka-grpc`.
 2. `"com.thesamet.scalapb" %% "scalapb-json4s"` to parse json requests into protobuf messages.
+
+
+`PlayArtifactsGenerator` will be moved to a separate project.
