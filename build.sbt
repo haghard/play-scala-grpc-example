@@ -92,12 +92,12 @@ genPlayArtifacts := Def.taskDyn {
   val protobufDir      = file(defaultProtobufFolder)
   val confFolder       = file(defaultConfFolder)
   val appDir           = file(defaultAppFolder)
-  val classesTargetDir = (target in Compile).value / s"scala-$majorMinorVer" / "akka-grpc" / "main"
+  val classesTargetDir = (Compile / target).value / s"scala-$majorMinorVer" / "akka-grpc" / "main"
   //(runMain in Compile).toTask(s" gateway.Main ${targetDir.absolutePath}").value
   
   val input = s"${classesTargetDir.absolutePath}${Sep}${protobufDir.absolutePath}${Sep}${appDir.getAbsolutePath}${Sep}${confFolder.getAbsolutePath}"
   if (classesTargetDir.exists() && protobufDir.exists()) {
-    Def.task { (runMain in Compile).toTask(s" gateway.PlayArtifactsGenerator $input").value }
+    Def.task { (Compile / runMain).toTask(s" gateway.PlayArtifactsGenerator $input").value }
   } else Def.task(println(s"Smth doesn't exists $input"))
 
   /*

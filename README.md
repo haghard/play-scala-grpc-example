@@ -1,11 +1,6 @@
-# Play Scala gRPC Example
-
-The project was taken from https://github.com/playframework/play-samples/tree/2.8.x/play-scala-grpc-example
-
-
 # Notes
 
-POC that generates `routes` file and a Play controller from protobuf definition file.
+POC that generates `routes` file and a Play controller from a protobuf definition file.
 
 ## Sbt commands
 

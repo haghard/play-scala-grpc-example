@@ -1,14 +1,14 @@
 package gateway
 
+import com.google.common.reflect.ClassPath
+
 import java.io.{File, FileOutputStream}
+import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.util.Using
 import scala.util.control.NonFatal
-import com.google.common.reflect.ClassPath
-
-import java.nio.charset.StandardCharsets
 
 /**
  * Take a look https://github.com/OpenHFT/Java-Runtime-Compiler
@@ -76,10 +76,10 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     val serviceInfo = services.headOption.getOrElse(throw new Exception("Failed to load service"))
     val serviceName = serviceInfo.getSimpleName
     val controllerName = s"${serviceName}Controller"
-    val newControllerFile = s"${appDir.toFile.getAbsolutePath}/$cntPkgName/$controllerName.scala"
+    val controllerFile = s"${appDir.toFile.getAbsolutePath}/$cntPkgName/$controllerName.scala"
     val routesFile = s"${confDir.toFile.getAbsolutePath}/$routesFileName"
 
-    Files.deleteIfExists(Paths.get(newControllerFile))
+    Files.deleteIfExists(Paths.get(controllerFile))
     Files.deleteIfExists(Paths.get(routesFile))
 
     val serviceClass = Class.forName(serviceInfo.getName)
@@ -111,7 +111,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     cBuffer.append(cntrFooter())
     rBuffer.append(routesFooter())
 
-    Using.resource(new FileOutputStream(newControllerFile))(_.write(cBuffer.toString().getBytes(StandardCharsets.UTF_8)))
+    Using.resource(new FileOutputStream(controllerFile))(_.write(cBuffer.toString().getBytes(StandardCharsets.UTF_8)))
     Using.resource(new FileOutputStream(routesFile))(_.write(rBuffer.toString().getBytes(StandardCharsets.UTF_8)))
 
   } catch {
