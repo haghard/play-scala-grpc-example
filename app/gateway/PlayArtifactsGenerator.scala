@@ -16,7 +16,6 @@ import scala.util.control.NonFatal
  */
 object PlayArtifactsGenerator extends App with PlayControllerScaffolding with PlayRoutesScaffolding {
   val SEP = "#"
-  val cntPkgName = "controllers" //
   val routesFileName = "routes"
   val Pref = "Service"
   val JavaPackageTag = "java_package"
@@ -34,6 +33,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     val appDir = Paths.get(paths(2))
     val confDir = Paths.get(paths(3))
     val protoFiles = protobufDir.listFiles((_: File, name: String) => name.endsWith(".proto"))
+    val targetControllersPackName = paths(4)
 
     val maybePackageName: Option[String] =
       if (protoFiles.size == 1) {
@@ -41,7 +41,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
         println(s"★ ★ ★ Protobuf schema file: ${schemaFile.getAbsolutePath} ★ ★ ★")
         val javaPackages =
           Using.resource(java.nio.file.Files.newBufferedReader(schemaFile.toPath)) { in =>
-            in.lines().filter { line => !line.contains("""//""") && line.contains(JavaPackageTag) || line.startsWith(PackageTag) }
+            in.lines().filter { line => !line.contains("""//""") && (line.contains(JavaPackageTag) || line.startsWith(PackageTag)) }
               .collect(Collectors.toList[String])
           }.asScala.toSeq
 
@@ -76,7 +76,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     val serviceInfo = services.headOption.getOrElse(throw new Exception("Failed to load service"))
     val serviceName = serviceInfo.getSimpleName
     val controllerName = s"${serviceName}Controller"
-    val controllerFile = s"${appDir.toFile.getAbsolutePath}/$cntPkgName/$controllerName.scala"
+    val controllerFile = s"${appDir.toFile.getAbsolutePath}/$targetControllersPackName/$controllerName.scala"
     val routesFile = s"${confDir.toFile.getAbsolutePath}/$routesFileName"
 
     Files.deleteIfExists(Paths.get(controllerFile))
@@ -92,7 +92,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
 
 
     val cBuffer = new StringBuilder()
-    cBuffer.append(cntrHeader(packageName, controllerName))
+    cBuffer.append(cntrHeader(targetControllersPackName, packageName, controllerName))
 
     val rBuffer = new StringBuilder()
     rBuffer.append(routesHeader())
@@ -104,13 +104,13 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
       val sd = servicesIt.next()
       sd.getMethods.forEach { serviceMethod =>
         cBuffer.append(cntrlMethod(serviceMethod.getName, serviceMethod.getInputType.getName, serviceMethod.getOutputType.getName))
-        rBuffer.append(routesRoute(controllerName, serviceMethod.getName))
+        rBuffer.append(routesRoute(targetControllersPackName, controllerName, serviceMethod.getName))
         println(s"★ ★ ★ Generating a Play controller method $packageName.$controllerName ${serviceMethod.getName} ★ ★ ★")
       }
     }
 
     cBuffer.append(cntrFooter())
-    rBuffer.append(routesFooter())
+    rBuffer.append(routesFooter(targetControllersPackName))
 
     //TODO: consider writing in chunks
     Using.resource(new FileOutputStream(controllerFile))(_.write(cBuffer.toString().getBytes(StandardCharsets.UTF_8)))

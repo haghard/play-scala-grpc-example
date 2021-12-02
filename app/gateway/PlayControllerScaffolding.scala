@@ -1,10 +1,8 @@
 package gateway
 
-import gateway.PlayArtifactsGenerator.cntPkgName
-
 trait PlayControllerScaffolding {
 
-  def cntrHeader(packageName: String, controllerName: String): String =
+  def cntrHeader(cntPkgName: String, packageName: String, controllerName: String): String =
     s"""package $cntPkgName
        |
        |import com.typesafe.config.Config
@@ -12,16 +10,16 @@ trait PlayControllerScaffolding {
        |import javax.inject.Inject
        |import play.api.mvc._
        |
-       |import ${packageName}._
+       |import $packageName._
        |
        |import scala.util.control.NonFatal
        |
        |import scala.concurrent.{ExecutionContext, Future}
        |
-       |class ${controllerName} @Inject()(config: Config)(implicit ec: ExecutionContext)
+       |class $controllerName @Inject()(config: Config)(implicit ec: ExecutionContext)
        |  extends InjectedController {
        |
-       |  private def parseJsonBody[T <: scalapb.GeneratedMessage: scalapb.GeneratedMessageCompanion](
+       |  private def jsonBodyToProto[T <: scalapb.GeneratedMessage: scalapb.GeneratedMessageCompanion](
        |    req: Request[AnyContent]
        |  ): Either[String, T] =
        |    req.body.asJson match {
@@ -39,11 +37,11 @@ trait PlayControllerScaffolding {
 
   def cntrlMethod(methodName: String, request: String, response: String): String =
     s"""
-       | def ${methodName}() = Action.async { implicit req =>
+       | def $methodName () = Action.async { implicit req =>
        |   val f: Future[Result] = Future {
-       |     val reply: ${response} = parseJsonBody[${request}](req) match {
-       |       case Right(pb) => ${response}("Hello " + pb.toProtoString)
-       |       case Left(error) => ${response}(error)
+       |     val reply: $response = jsonBodyToProto[$request](req) match {
+       |       case Right(pb) => $response("Hello " + pb.toProtoString)
+       |       case Left(error) => $response(error)
        |     }
        |     Ok(reply.message)
        |   }

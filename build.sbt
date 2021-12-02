@@ -38,8 +38,8 @@ lazy val `play-scala-grpc-example` = (project in file("."))
           ExecCmd("RUN", "apk", "add", "--no-cache", "bash")
         ) ++
         dockerCommands.value.tail,
-    dockerAliases in Docker += DockerAlias(None, None, "play-scala-grpc-example", None),
-    packageName in Docker := "play-scala-grpc-example",
+    Docker / dockerAliases += DockerAlias(None, None, "play-scala-grpc-example", None),
+    Docker / packageName := "play-scala-grpc-example",
   )
   .settings(
     libraryDependencies ++= CompileDeps ++ TestDeps
@@ -57,7 +57,6 @@ val CompileDeps = Seq(
   "com.typesafe.akka" %% "akka-http2-support"   %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
 
-  //"com.thesamet.scalapb" %% "scalapb-json4s" % "0.10.0",
   "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.0",
   
   //current: 3.11.4
@@ -80,13 +79,15 @@ val TestDeps = Seq(
 
 val genPlayArtifacts = taskKey[Unit]("Generate Play artifacts (routes and controllers) using gRPC definition")
 
-// standart Play project paths
-val defaultAppFolder = "./app"
-val defaultConfFolder = "./conf"
-val defaultProtobufFolder = "./app/protobuf"
-
 genPlayArtifacts := Def.taskDyn {
+
+  // standart Play project paths
+  val defaultAppFolder = "./app"
+  val defaultConfFolder = "./conf"
+  val defaultProtobufFolder = "./app/protobuf"
+
   val Sep = "#"
+  val targetControllersPackName = "controllers"
   val v = scalaVersion.value
   val majorMinorVer    = v.substring(0, v.lastIndexOf("."))
   val protobufDir      = file(defaultProtobufFolder)
@@ -95,7 +96,7 @@ genPlayArtifacts := Def.taskDyn {
   val classesTargetDir = (Compile / target).value / s"scala-$majorMinorVer" / "akka-grpc" / "main"
   //(runMain in Compile).toTask(s" gateway.Main ${targetDir.absolutePath}").value
   
-  val input = s"${classesTargetDir.absolutePath}${Sep}${protobufDir.absolutePath}${Sep}${appDir.getAbsolutePath}${Sep}${confFolder.getAbsolutePath}"
+  val input = s"${classesTargetDir.absolutePath}${Sep}${protobufDir.absolutePath}${Sep}${appDir.getAbsolutePath}${Sep}${confFolder.getAbsolutePath}${Sep}${targetControllersPackName}"
   if (classesTargetDir.exists() && protobufDir.exists()) {
     Def.task { (Compile / runMain).toTask(s" gateway.PlayArtifactsGenerator $input").value }
   } else Def.task(println(s"Smth doesn't exists $input"))
@@ -123,6 +124,5 @@ Test / sourceGenerators += Def.task {
 scalaVersion := "2.13.7"
 scalacOptions ++= List("-encoding", "utf8", "-deprecation", "-feature", "-unchecked")
 
-
 // Make verbose tests
-testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", "-v"))
+Test / testOptions := Seq(Tests.Argument(TestFrameworks.JUnit, "-a", "-v"))

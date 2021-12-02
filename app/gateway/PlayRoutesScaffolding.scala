@@ -1,7 +1,5 @@
 package gateway
 
-import gateway.PlayArtifactsGenerator.cntPkgName
-
 trait PlayRoutesScaffolding {
 
   def routesHeader(): String =
@@ -12,15 +10,15 @@ trait PlayRoutesScaffolding {
        |""".stripMargin
 
 
-  def routesFooter(): String =
+  def routesFooter(cntPkgName: String): String =
     s"""
        |
        |# Map static resources from the /public folder to the /assets URL path
-       |GET     /assets/*file        $cntPkgName.Assets.versioned(path="/public", file: Asset)
+       |GET     /assets/*file   $cntPkgName.Assets.versioned(path="/public", file: Asset)
        |
        |""".stripMargin
 
-  def routesRoute(controllerName: String, method: String): String =
+  def routesRoute(cntPkgName: String, controllerName: String, method: String): String =
     s"""
        |POST  /$method  $cntPkgName.$controllerName.$method()
        |
