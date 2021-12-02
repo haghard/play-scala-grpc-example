@@ -5,35 +5,24 @@ The project was taken from https://github.com/playframework/play-samples/tree/2.
 
 # Notes
 
-I disabled https and left http only.
+POC that generates `routes` file and a Play controller from protobuf definition file.
 
-
-### How to run in dev mode
-
-```
-  sbt run 
-```
-
-curl http://localhost:8080
-
-
-Without refliction
-
-```      
-   grpcurl -plaintext -import-path ./play-scala-grpc-example/app/protobuf -proto helloworld.proto localhost:8080 helloworld.GreeterService/SayHello
-```
-
-
-
-With refliction
+## Sbt commands
 
 ```
-   grpcurl -plaintext localhost:8080 list
-   grpcurl -plaintext localhost:8080 helloworld.GreeterService/SayHello
-``` 
-    
 
-http --verbose POST http://192.168.77.106:8080/sayHello name="alice" age=128
-    
+genPlayArtifacts
+compile
+run 
+
+```
+
+Right after that you should be able to call these 
+ 
+```
+http --verbose POST http://127.0.0.1:8080/sayHello  name="alice" age=128
+http --verbose POST http://127.0.0.1:8080/sayHello1 name="alice"
+  
+```  
     
 
