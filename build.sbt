@@ -2,6 +2,7 @@ import play.core.PlayVersion.akkaVersion
 import play.core.PlayVersion.akkaHttpVersion
 import play.grpc.gen.scaladsl.{PlayScalaClientCodeGenerator, PlayScalaServerCodeGenerator}
 import com.typesafe.sbt.packager.docker.{Cmd, CmdLike, DockerAlias, ExecCmd}
+import play.core.PlayVersion
 import play.scala.grpc.sample.BuildInfo
 
 name := "play-scala-grpc-example"
@@ -44,15 +45,20 @@ lazy val `play-scala-grpc-example` = (project in file("."))
     libraryDependencies ++= CompileDeps ++ TestDeps
   )
 
+val akkaHttpVer = "10.2.7"
 val CompileDeps = Seq(
   guice,
   "com.lightbend.play" %% "play-grpc-runtime" % BuildInfo.playGrpcVersion, //0.9.1
-  "com.typesafe.akka" %% "akka-discovery" % akkaVersion,
-  "com.typesafe.akka" %% "akka-http" % akkaHttpVersion,
-  "com.typesafe.akka" %% "akka-http2-support" % akkaHttpVersion,
-  "com.typesafe.akka" %% "akka-http-spray-json" % akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-discovery" % PlayVersion.akkaVersion,
+  "com.typesafe.akka" %% "akka-http" % PlayVersion.akkaHttpVersion,
 
-  "com.thesamet.scalapb" %% "scalapb-json4s" % "0.10.0",
+
+  //You can solve this by adding an explicit dependency on version 10.2.7 of the [akka-http-spray-json, akka-http2-support] artifacts to your project.
+  "com.typesafe.akka" %% "akka-http2-support"   %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
+  "com.typesafe.akka" %% "akka-http-spray-json" %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
+
+  //"com.thesamet.scalapb" %% "scalapb-json4s" % "0.10.0",
+  "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.0",
   
   //current: 3.11.4
   //"com.google.protobuf" % "protobuf-java-util" % "3.19.1",

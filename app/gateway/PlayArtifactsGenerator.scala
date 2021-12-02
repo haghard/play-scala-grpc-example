@@ -19,7 +19,7 @@ object PlayArtifactsGenerator extends App {
   val Pref = "Service"
   val JavaPackageTag = "java_package"
   val PackageTag = "package"
-  
+
   //option java_package = "example.helloworld.service";
   val JavaPackageExp = s"""option(.*)${JavaPackageTag}(.*)=(.*)""".r
   //package example.myapp.helloworld.grpc
@@ -45,17 +45,16 @@ object PlayArtifactsGenerator extends App {
               .collect(Collectors.toList[String])
           }.asScala.toSeq
 
-        //http://myregexp.com/
         val local = javaPackages.size match {
           case 1 =>
             javaPackages.head
           case 2 =>
             val a = javaPackages.head
             val b = javaPackages.tail.head
-            println("""option java_package takes precedence over package""")
+            println(""" "option" java_package takes precedence over "package" """)
             if(a.contains(JavaPackageTag)) a else b
           case _ =>
-            throw new Exception("Smth's wrong with package definition")
+            throw new Exception("Smth's wrong with protobuf package definition")
         }
         val packageName = local match {
           case JavaPackageExp(_, _, name) => name.replace("\"", "").replace(";", "").trim
@@ -85,6 +84,7 @@ object PlayArtifactsGenerator extends App {
 
     val serviceClass = Class.forName(serviceInfo.getName)
     val methods = serviceClass.getMethods
+
     //example.myapp.helloworld.grpc.GreeterService.descriptor
     val descriptorMethod = methods.find(_.getName.contains("descriptor")).getOrElse(throw new Exception(s"Couldn't find descriptor on ${serviceInfo.getName}"))
     val fileDescriptor = descriptorMethod.invoke(serviceClass).asInstanceOf[com.google.protobuf.Descriptors.FileDescriptor]
@@ -96,6 +96,7 @@ object PlayArtifactsGenerator extends App {
       sd.getMethods.forEach { serviceMethod =>
 
         println(s"★ ★ ★ Generating play controller $packageName.$controllerName ★ ★ ★")
+
         Using.resource(new FileOutputStream(newControllerFile))(_.write(
             genPlayController(
               packageName,
