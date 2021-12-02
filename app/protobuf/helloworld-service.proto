@@ -1,10 +1,18 @@
 syntax = "proto3";
 
-package example.helloworld.service1;
+import "scalapb/scalapb.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+package example.helloworld.service;
 
 //option java_package takes precedence over package
-
 option java_package = "example.helloworld.service";
+
+option (scalapb.options) = {
+    no_default_values_in_constructor: false
+};
 
 service GreeterService {
 
@@ -13,6 +21,9 @@ service GreeterService {
 
     //post
     rpc sayHello2 (HelloRequest2) returns (HelloReply2) {}
+
+    //get
+    rpc healthCheck(Empty) returns (Empty) {}
 
 }
 
@@ -23,9 +34,8 @@ message HelloRequest {
 
 message HelloReply {
     string message=1;
-    int32 age=2;
+    google.protobuf.Timestamp when=2;
 }
-
 
 message HelloRequest2 {
     string name=1;
@@ -35,5 +45,12 @@ message HelloReply2 {
     string message=1;
 }
 
+message BigDecimalPB {
+    option (scalapb.message).type = "scala.math.BigDecimal";
+    uint64 unscaledValue = 1;
+    int32 scale = 2;
+}
 
-message Empty {}
+message Empty {
+    string message=1;
+}

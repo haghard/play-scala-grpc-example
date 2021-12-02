@@ -19,12 +19,16 @@ run
  
 ```
 http --verbose POST http://127.0.0.1:8080/sayHello  name="alice" age=128
-http --verbose POST http://127.0.0.1:8080/sayHello1 name="alice"
+http --verbose POST http://127.0.0.1:8080/sayHello2 name="alice"
+http --verbose POST http://127.0.0.1:8080/healthCheck
   
 ```  
     
 
 ## Notes 
+
+Currently, we support only http post requests.
+
 
 Software we rely upon 
 

@@ -40,10 +40,10 @@ trait PlayControllerScaffolding {
        | def $methodName () = Action.async { implicit req =>
        |   val f: Future[Result] = Future {
        |     val reply: $response = jsonBodyToProto[$request](req) match {
-       |       case Right(pb) => $response("Hello " + pb.toProtoString)
+       |       case Right(pb) => $response(pb.toProtoString)
        |       case Left(error) => $response(error)
        |     }
-       |     Ok(reply.message)
+       |     Ok(reply.toProtoString)
        |   }
        |   f
        | }

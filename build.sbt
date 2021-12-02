@@ -99,7 +99,7 @@ genPlayArtifacts := Def.taskDyn {
   val input = s"${classesTargetDir.absolutePath}${Sep}${protobufDir.absolutePath}${Sep}${appDir.getAbsolutePath}${Sep}${confFolder.getAbsolutePath}${Sep}${targetControllersPackName}"
   if (classesTargetDir.exists() && protobufDir.exists()) {
     Def.task { (Compile / runMain).toTask(s" gateway.PlayArtifactsGenerator $input").value }
-  } else Def.task(println(s"Smth doesn't exists $input"))
+  } else Def.task(println(s"Some paths are missing. Try to compile first $input"))
 
   /*
   val javaHome = sys.env("JAVA_HOME")
