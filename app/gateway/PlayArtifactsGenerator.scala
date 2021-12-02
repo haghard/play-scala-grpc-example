@@ -175,7 +175,7 @@ object PlayArtifactsGenerator extends App {
        |      //val reply: ${response} = parseResult.fold(???, ???)
        |
        |      val reply: ${response} = parse[${request}](req) match {
-       |        case Right(pb) => ${response}("Hello " + pb.name + ":" + pb.age)
+       |        case Right(pb) => ${response}("Hello " + pb.toProtoString)
        |        case Left(error) => ${response}(error)
        |      }
        |
