@@ -4,6 +4,7 @@ import "scalapb/scalapb.proto";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
 
 package example.helloworld.service;
 
@@ -23,7 +24,12 @@ service GreeterService {
     rpc sayHello2 (HelloRequest2) returns (HelloReply2) {}
 
     //get
-    rpc healthCheck(Empty) returns (Empty) {}
+    rpc healthCheck(Empty) returns (Empty) {
+        option (google.api.http) = {
+            get: "/healthCheck",
+            body: "*",
+        };
+    }
 
 }
 
