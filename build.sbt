@@ -49,8 +49,8 @@ val akkaHttpVer = "10.2.7"
 val CompileDeps = Seq(
   guice,
   "com.lightbend.play" %% "play-grpc-runtime" % BuildInfo.playGrpcVersion, //0.9.1
-  "com.typesafe.akka" %% "akka-discovery" % PlayVersion.akkaVersion,
-  "com.typesafe.akka" %% "akka-http" % PlayVersion.akkaHttpVersion,
+  "com.typesafe.akka"  %% "akka-discovery" % PlayVersion.akkaVersion,
+  "com.typesafe.akka"  %% "akka-http" % PlayVersion.akkaHttpVersion,
 
 
   //You can solve this by adding an explicit dependency on version 10.2.7 of the [akka-http-spray-json, akka-http2-support] artifacts to your project.
@@ -58,6 +58,7 @@ val CompileDeps = Seq(
   "com.typesafe.akka" %% "akka-http-spray-json" %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
 
   "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.0",
+  "org.reflections" % "reflections" % "0.10.2",
   
   //current: 3.11.4
   //"com.google.protobuf" % "protobuf-java-util" % "3.19.1",

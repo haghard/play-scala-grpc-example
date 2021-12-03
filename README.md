@@ -15,7 +15,7 @@ run
 
 ```
 
-3. You should be able to call these and get responses back 
+3. These should go through 
  
 ```
 http --verbose POST http://127.0.0.1:8080/sayHello  name="alice" age=128
@@ -35,5 +35,8 @@ Software we rely upon
 1. `play-grpc-generators` and `akka-grpc`.
 2. `"com.thesamet.scalapb" %% "scalapb-json4s"` to parse json requests into protobuf messages.
 
+                          
+### Next steps
 
-`PlayArtifactsGenerator` will be moved to a separate project.
+1.  gRPC Transcoding (parse and codegen)
+2. `PlayArtifactsGenerator` should be moved to a separate project or create sbt plugin.
