@@ -15,7 +15,7 @@ option (scalapb.options) = {
   no_default_values_in_constructor: false
 };
 
-service Greeter {
+service GreeterService {
 
   //post
   rpc sayHello (HelloRequest) returns (HelloReply) {}

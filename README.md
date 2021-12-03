@@ -18,9 +18,9 @@ run
 3. These should go through 
  
 ```
-http --verbose POST http://127.0.0.1:8080/sayHello  name="alice" age=128
-http --verbose POST http://127.0.0.1:8080/sayHello2 name="alice"
-http --verbose POST http://127.0.0.1:8080/healthCheck
+http --verbose POST :8080/sayHello  name="alice" age=128
+http --verbose POST :8080/sayHello2 name="alice"
+http --verbose POST :8080/healthCheck
   
 ```  
     
