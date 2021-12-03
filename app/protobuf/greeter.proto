@@ -6,7 +6,10 @@ import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 
+
 package example.helloworld.service;
+
+option java_multiple_files = true;
 
 //option java_package takes precedence over package
 option java_package = "example.helloworld.service";
@@ -18,11 +21,31 @@ option (scalapb.options) = {
 service GreeterService {
 
   //post
-  rpc sayHello (HelloRequest) returns (HelloReply) {}
-  
-  rpc sayHello2 (HelloRequest2) returns (HelloReply2) {}
+  rpc sayHello (HelloRequest) returns (HelloReply) {
+    option (google.api.http) = {
+      post: "/v1/sayHello"
+      body: "*"
+   };
+  }
 
-  rpc healthCheck(Empty) returns (Empty) {}
+  //post
+  rpc sayHello2 (HelloRequest2) returns (HelloReply2) {
+    option (google.api.http) = {
+      get: "/v1/{name=messages/*}"
+      //post: "/v1/sayHello2"
+      //body: "*"
+    };
+  }
+
+  rpc sayHello3(UpdateMessageRequest) returns (Message) {
+    option (google.api.http) = {
+      patch: "/v1/messages/{message_id}"
+      body: "message"
+    };
+  }
+
+  //If you want to create an endpoint that takes no parameters or produces no response, it might be tempting to use the Empty type as defined by Google in their empty.proto.
+  //rpc healthCheck(Empty) returns (HealthCheckStatus) {}
 }
 
 message HelloRequest {
@@ -49,6 +72,19 @@ message BigDecimalPB {
   int32 scale = 2;
 }
 
-message Empty {
-  string message = 1;
+message Empty{}
+
+
+message HealthCheckStatus {
+  google.protobuf.BoolValue status = 1;
+}
+
+message UpdateMessageRequest {
+  string message_id = 1; // mapped to the URL
+  Message message = 2;   // mapped to the body
+}
+
+message Message {
+  string message_id = 1;
+  string text = 2;
 }

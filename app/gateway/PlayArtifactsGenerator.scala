@@ -1,5 +1,6 @@
 package gateway
 
+import com.google.api.HttpRule
 import org.reflections.Reflections
 import org.reflections.util.ConfigurationBuilder
 
@@ -11,10 +12,6 @@ import scala.jdk.CollectionConverters.CollectionHasAsScala
 import scala.util.Using
 import scala.util.control.NonFatal
 
-/**
- *
- *
- */
 object PlayArtifactsGenerator extends App with PlayControllerScaffolding with PlayRoutesScaffolding {
   val SEP = "#"
   val routesFileName = "routes"
@@ -26,11 +23,15 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
   val PackageExp = """package(.*)""".r
   val JavaPackageExp = s"""option(.*)${JavaPackageTag}(.*)=(.*)""".r
 
+  val HttpOptionExp = """(\d*):(.*)""".r
+
+  //google.protobuf.MethodOptions { HttpRule http = 72295728; }
+  val HttpRuleHttp = 72295728
+
   //We rely on a simple fact that all generate gRPC services extend from `akka.grpc.ServiceDescription`.
   //Looks like it's a stable invariant.
   val sdClass = classOf[akka.grpc.ServiceDescription]
 
-  //println(s"""★ ★ ★ Main: ${args.mkString(",")} ★ ★ ★""")
   try {
     val paths = args(0).split(SEP)
     val protobufDir = Paths.get(paths(1)).toFile
@@ -80,7 +81,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     val grpcServiceClass = grpcServicesClasses.headOption.getOrElse(throw new Exception("Failed to load service"))
     println(s"★ ★ ★ Found gRPC service ${grpcServiceClass.getName} ★ ★ ★")
 
-    val serviceName = grpcServiceClass.getSimpleName.replace("$","")
+    val serviceName = grpcServiceClass.getSimpleName.replace("$", "")
     val controllerName = s"$serviceName$Postfix"
 
     val controllerFile = s"${appDir.toFile.getAbsolutePath}/$targetControllersPackName/$controllerName.scala"
@@ -104,7 +105,48 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     //we support just one service for the time being
     if (servicesIt.hasNext) {
       val sd = servicesIt.next()
+
       sd.getMethods.forEach { serviceMethod =>
+        val methodOps: com.google.protobuf.DescriptorProtos.MethodOptions = serviceMethod.getOptions()
+
+        //There is no way to parse `HttpRule` from `MethodOptions` so I have to do it manually
+        val kvs = methodOps.toString.replace(HttpRuleHttp.toString + ":", "").split("\n")
+
+        var httpRule = HttpRule.defaultInstance
+        (1 to kvs.size - 2).foreach { i =>
+          kvs(i).trim match {
+            case HttpOptionExp(ind, value) =>
+              val v = value.replaceAll("\"", "")
+              HttpRule.scalaDescriptor.fields(ind.trim.toInt).index match {
+                case 1 => httpRule = httpRule.withSelector(v)
+                case 2 => httpRule = httpRule.withGet(v)
+                case 3 => httpRule = httpRule.withPut(v)
+                case 4 => httpRule = httpRule.withPost(v)
+                case 5 => httpRule = httpRule.withDelete(v)
+                case 6 => httpRule = httpRule.withPatch(v)
+                case 7 => httpRule = httpRule.withBody(v)
+                case 8 => httpRule.withCustom(com.google.api.CustomHttpPattern(v))
+                case 12 => httpRule.withResponseBody(v)
+              }
+            case _ => throw new Exception("Failed to parse HttpRule")
+          }
+        }
+
+        println(httpRule)
+
+        /*httpRule.pattern match {
+          case Pattern.Get(value) => ???
+          case Pattern.Put(value) => ???
+          case Pattern.Post(value) => ???
+          case Pattern.Delete(value) => ???
+          case Pattern.Patch(value) => ???
+          case Pattern.Custom(value) => ???
+          case Pattern.Empty => ???
+        }*/
+
+        httpRule.body
+
+
         cBuffer.append(cntrlMethod(serviceMethod.getName, serviceMethod.getInputType.getName, serviceMethod.getOutputType.getName))
         rBuffer.append(routesRoute(targetControllersPackName, controllerName, serviceMethod.getName))
         println(s"★ ★ ★ Generating $packageName.$controllerName method ${serviceMethod.getName} ★ ★ ★")
