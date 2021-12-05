@@ -22,7 +22,6 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
 
   val PackageExp = """package(.*)""".r
   val JavaPackageExp = s"""option(.*)${JavaPackageTag}(.*)=(.*)""".r
-
   val HttpOptionExp = """(\d*):(.*)""".r
 
   //google.protobuf.MethodOptions { HttpRule http = 72295728; }
@@ -115,18 +114,19 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
         var httpRule = HttpRule.defaultInstance
         (1 to kvs.size - 2).foreach { i =>
           kvs(i).trim match {
-            case HttpOptionExp(ind, value) =>
-              val v = value.replaceAll("\"", "")
-              HttpRule.scalaDescriptor.fields(ind.trim.toInt).index match {
-                case 1 => httpRule = httpRule.withSelector(v)
-                case 2 => httpRule = httpRule.withGet(v)
-                case 3 => httpRule = httpRule.withPut(v)
-                case 4 => httpRule = httpRule.withPost(v)
-                case 5 => httpRule = httpRule.withDelete(v)
-                case 6 => httpRule = httpRule.withPatch(v)
-                case 7 => httpRule = httpRule.withBody(v)
-                case 8 => httpRule.withCustom(com.google.api.CustomHttpPattern(v))
-                case 12 => httpRule.withResponseBody(v)
+            case HttpOptionExp(ind, value0) =>
+              val value = value0.replaceAll("\"", "")
+              ind.trim.toInt match {
+                case HttpRule.SELECTOR_FIELD_NUMBER => httpRule = httpRule.withSelector(value)
+                case HttpRule.GET_FIELD_NUMBER => httpRule = httpRule.withGet(value)
+                case HttpRule.PUT_FIELD_NUMBER => httpRule = httpRule.withPut(value)
+                case HttpRule.POST_FIELD_NUMBER => httpRule = httpRule.withPost(value)
+                case HttpRule.DELETE_FIELD_NUMBER => httpRule = httpRule.withDelete(value)
+                case HttpRule.PATCH_FIELD_NUMBER => httpRule = httpRule.withPatch(value)
+                case HttpRule.BODY_FIELD_NUMBER =>  httpRule = httpRule.withBody(value)
+                case HttpRule.CUSTOM_FIELD_NUMBER => httpRule = httpRule.withCustom(com.google.api.CustomHttpPattern(value))
+                case HttpRule.ADDITIONAL_BINDINGS_FIELD_NUMBER =>
+                case HttpRule.RESPONSE_BODY_FIELD_NUMBER => httpRule = httpRule.withResponseBody(value)
               }
             case _ => throw new Exception("Failed to parse HttpRule")
           }
@@ -145,7 +145,6 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
         }*/
 
         httpRule.body
-
 
         cBuffer.append(cntrlMethod(serviceMethod.getName, serviceMethod.getInputType.getName, serviceMethod.getOutputType.getName))
         rBuffer.append(routesRoute(targetControllersPackName, controllerName, serviceMethod.getName))
