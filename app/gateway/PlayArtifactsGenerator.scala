@@ -47,19 +47,16 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
           Using.resource(java.nio.file.Files.newBufferedReader(schemaFile.toPath)) { in =>
             in.lines().filter { line => !line.contains("""//""") && (line.contains(JavaPackageTag) || line.startsWith(PackageTag)) }
               .collect(Collectors.toList[String])
-          }.asScala.toSeq
+          }.asScala.toList
 
-        val javaPackagesLine = javaPackages.size match {
-          case 1 =>
-            javaPackages.head
-          case 2 =>
-            val a = javaPackages.head
-            val b = javaPackages.tail.head
+        val javaPackagesLine = javaPackages match {
+          case List(line) => line
+          case List(left, right) =>
             println(""" "option java_package" takes precedence over "package" """)
-            if (a.contains(JavaPackageTag)) a else b
-          case _ =>
-            throw new Exception("Smth's wrong with protobuf package definition")
+            if (left.contains(JavaPackageTag)) left else right
+          case _ => throw new Exception("Smth's wrong with protobuf package definition")
         }
+
         val packageName = javaPackagesLine match {
           case JavaPackageExp(_, _, name) => name.replace("\"", "").replace(";", "").trim
           case PackageExp(name) => name.replace("\"", "").replace(";", "").trim
@@ -108,12 +105,12 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
       sd.getMethods.forEach { serviceMethod =>
         val methodOps: com.google.protobuf.DescriptorProtos.MethodOptions = serviceMethod.getOptions()
 
-        //There is no way to parse `HttpRule` from `MethodOptions` so I have to do it manually
-        val kvs = methodOps.toString.replace(HttpRuleHttp.toString + ":", "").split("\n")
+        //There is no way to parse `HttpRule` from `MethodOptions` so I had to do it manually.
+        val httpRuleStr = methodOps.toString.replace(s"$HttpRuleHttp:", "").split("\n")
 
         var httpRule = HttpRule.defaultInstance
-        (1 to kvs.size - 2).foreach { i =>
-          kvs(i).trim match {
+        (1 to httpRuleStr.size - 2).foreach { i =>
+          httpRuleStr(i).trim match {
             case HttpOptionExp(ind, value0) =>
               val value = value0.replaceAll("\"", "")
               ind.trim.toInt match {
@@ -123,7 +120,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
                 case HttpRule.POST_FIELD_NUMBER => httpRule = httpRule.withPost(value)
                 case HttpRule.DELETE_FIELD_NUMBER => httpRule = httpRule.withDelete(value)
                 case HttpRule.PATCH_FIELD_NUMBER => httpRule = httpRule.withPatch(value)
-                case HttpRule.BODY_FIELD_NUMBER =>  httpRule = httpRule.withBody(value)
+                case HttpRule.BODY_FIELD_NUMBER => httpRule = httpRule.withBody(value)
                 case HttpRule.CUSTOM_FIELD_NUMBER => httpRule = httpRule.withCustom(com.google.api.CustomHttpPattern(value))
                 case HttpRule.ADDITIONAL_BINDINGS_FIELD_NUMBER =>
                 case HttpRule.RESPONSE_BODY_FIELD_NUMBER => httpRule = httpRule.withResponseBody(value)
@@ -161,7 +158,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
 
   } catch {
     case NonFatal(ex) =>
-      println(s"Critical error: ${ex.getMessage}")
+      println(s"Critical error during Play artifacts generation: ${ex.getMessage}")
       System.exit(-1)
   }
 }
