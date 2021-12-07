@@ -25,11 +25,17 @@ trait PlayRoutesScaffolding {
        |""".stripMargin
 
 
-  def routesGetRoute(cntPkgName: String, controllerName: String, path: String, method: String,
-    pathParams: Map[String, String], queryParams: Map[String, String]): String =
+  def routesGetRoute(
+    cntPkgName: String, controllerName: String, getPath: String, method: String,
+    pathParams: Map[String, String] = Map.empty, queryParams: Map[String, String] = Map.empty
+  ): String =
+    if(pathParams.isEmpty && queryParams.isEmpty)
     s"""
-       |GET $path  $cntPkgName.$controllerName.$method(${pathParams.map { case (param, tp) => s"$param: $tp" }.mkString(", ")}, ${queryParams.map { case (param, tp) => s"$param: $tp" }.mkString(", ")})
-       |
+        |GET $getPath  $cntPkgName.$controllerName.$method()
+        |""".stripMargin
+    else
+    s"""
+       |GET $getPath  $cntPkgName.$controllerName.$method(${pathParams.map { case (param, tp) => s"$param: $tp" }.mkString(", ")}, ${queryParams.map { case (param, tp) => s"$param: $tp" }.mkString(", ")})
        |""".stripMargin
 
 }

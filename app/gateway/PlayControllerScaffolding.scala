@@ -2,7 +2,7 @@ package gateway
 
 trait PlayControllerScaffolding {
 
-  def cntrPostHeader(cntPkgName: String, packageName: String, controllerName: String): String =
+  def controllerHeader(cntPkgName: String, packageName: String, controllerName: String): String =
     s"""package $cntPkgName
        |
        |import com.typesafe.config.Config
@@ -15,6 +15,8 @@ trait PlayControllerScaffolding {
        |import scala.util.control.NonFatal
        |
        |import scala.concurrent.{ExecutionContext, Future}
+       |
+       |import com.google.api.HttpBody
        |
        |class $controllerName @Inject()(config: Config)(implicit ec: ExecutionContext)
        |  extends InjectedController {
@@ -35,7 +37,7 @@ trait PlayControllerScaffolding {
        |
       """.stripMargin
 
-  def cntrlPostMethod(methodName: String, request: String, response: String): String =
+  def controllerPostMethod(methodName: String, request: String, response: String): String =
     s"""
        | def $methodName () = Action.async { implicit req =>
        |   val f: Future[Result] = Future {
@@ -49,18 +51,28 @@ trait PlayControllerScaffolding {
        | }
        |""".stripMargin
 
-  def cntrlGetMethod(
-    methodName: String, pathParams: Map[String, String],
-    queryParams: Map[String, String], response: String): String =
-    s"""
-       | def $methodName (${pathParams.map { case (m, t) => s"$m: $t" }.mkString(", ")}, ${queryParams.map { case (m, t) => s"$m: $t" }.mkString(", ")}) = Action { implicit req =>
-       |   val r: $response = ???
-       |
-       |   Ok(r.toProtoString)
-       | 
-       | }
-       |""".stripMargin
+  def controllerGetMethod(
+    methodName: String, response: String,
+    pathParams: Map[String, String] = Map.empty,
+    queryParams: Map[String, String] = Map.empty
+  ): String =
+    if (pathParams.isEmpty && queryParams.isEmpty)
+      s"""
+         | def $methodName () = Action { implicit req =>
+         |   val r: $response = ???
+         |
+         |   Ok(r.toProtoString)
+         | }
+         |""".stripMargin
+    else
+      s"""
+         | def $methodName (${pathParams.map { case (m, t) => s"$m: $t" }.mkString(", ")}, ${queryParams.map { case (m, t) => s"$m: $t" }.mkString(", ")}) = Action { implicit req =>
+         |   val r: $response = ???
+         |
+         |   Ok(r.toProtoString)
+         | }
+         |""".stripMargin
 
-  def cntrFooter(): String = "\n}"
+  def controllerFooter(): String = "\n}"
 
 }

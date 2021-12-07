@@ -7,6 +7,8 @@ import "google/protobuf/wrappers.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/api/httpbody.proto";
 
 package example.messaging;
 
@@ -23,30 +25,65 @@ service Messaging {
 
   rpc GetMessage(GetMessageRequest) returns (Message) {
     option (google.api.http) = {
-      //get: "/v1/messages/{name}"
-      get: "/v1/messages/{name}/age/{age}"
+      ///get: "/v1/messages/{name}"
+      get: "/v1/messages/{name}/age/{age}/"
     };
   }
 
   rpc GetMessage2(GetMessageRequest) returns (Message) {
     option (google.api.http) = {
-      get: "/v1/{name=messages/*}"
+      get: "/v1/{name=messages2/*}"
     };
   }
 
+  //Define your service in gRPC with an httpbody response message
+  //https://grpc-ecosystem.github.io/grpc-gateway/docs/mapping/httpbody_messages/
+  //The HTTPBody messages allow a response message to be specified with custom data content and a custom content-type header.
+
+  //http --verbose GET ":8080/helloworld
+  //val r: HttpBody = HttpBody("text/html", com.google.protobuf.ByteString.copyFromUtf8("Hello HelloWorld"))
+  rpc HelloWorld(google.protobuf.Empty) returns (google.api.HttpBody) {
+    option (google.api.http) = {
+      get: "/helloworld"
+    };
+  }
+
+  //http --verbose GET ":8080/download"
+  //val r: HttpBody = HttpBody("text/html", com.google.protobuf.ByteString.copyFromUtf8("Download"))
+  rpc Download(google.protobuf.Empty) returns (google.api.HttpBody) {
+    option (google.api.http) = {
+      get: "/download"
+    };
+  }
+
+  //rpc UpdateMessage(AddNewMessage) returns (AddMessageReply) {
+  //   option (google.api.http) = {
+  //     //patch: "/v1/messages/{message_id}"
+  //     post: "/v1/messages/{message_id}"
+  //     body: "*"
+  //   };
+  // }
 }
 
 message GetMessageRequest {
-  string name = 1; // Mapped to URL path.
-  int32 age = 2; // Mapped to URL path.
-  int32 weight = 3; // as a query param.
-  bool status = 4; // as a query param.
+  string name = 1;  // Mapped to URL path.
+  int32 age = 2;    // Mapped to URL path.
+  int32 weight = 3; // Mapped to URL query parameter `weight`.
+  bool status = 4;  // Mapped to URL query parameter `status`.
 }
 
 message Message {
   string text = 1; // The resource content.
 }
 
+message AddNewMessage {
+  string message_id = 1;
+  string text = 2;
+}
+
+message AddMessageReply {
+  bool status = 1;
+}
 
 // This enables an HTTP REST to gRPC mapping as below:
 //

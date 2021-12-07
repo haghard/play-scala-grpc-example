@@ -24,14 +24,19 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
   val JavaPackageExp = s"""option(.*)${JavaPackageTag}(.*)=(.*)""".r
   val HttpOptionExp = """(\d*):(.*)""".r
 
+  //validate a URL path with no query params (e.g. /helloworld, /hello/world )
+  val PathWithNoQueryParams = """^\/[/.a-zA-Z0-9-]+$""".r
+
   // get: /v1/{name=messages/*}
   val PathParamKVExp = """(.+)\{(.+)=(.+)\}""".r
 
-  /*
-   * get: /v1/messages/{name}
-   * get: /v1/messages/{name}/age/{age}
+  /**
+   * 
+   * (e.g. /v1/messages/{name}, /v1/messages/{name}/age/{age}
    */
   val PathParamsExp = """\{(.*?)}""".r
+
+  val EmptyMessage = com.google.protobuf.Empty.getDescriptor.getFullName
 
   //google.protobuf.MethodOptions { HttpRule http = 72295728; }
   val HttpRuleHttp = 72295728
@@ -40,7 +45,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
   //Looks like it's a stable invariant.
   val sdClass = classOf[akka.grpc.ServiceDescription]
 
-  def asScalaType(protoType: String): String =
+  def asPlayType(protoType: String): String =
     protoType.charAt(0).toUpper.toString + protoType.substring(1)
 
   try {
@@ -102,7 +107,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
     val descriptor = servDesc.instance.asInstanceOf[akka.grpc.ServiceDescription].descriptor
 
     val cBuffer = new StringBuilder()
-    cBuffer.append(cntrPostHeader(targetControllersPackName, packageName, controllerName))
+    cBuffer.append(controllerHeader(targetControllersPackName, packageName, controllerName))
 
     val rBuffer = new StringBuilder()
     rBuffer.append(routesHeader())
@@ -143,9 +148,10 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
         httpRule.pattern match {
           case Pattern.Get(path) =>
             println(s"*** GET ${path.trim}")
+            val cleanPath = path.trim
             val (pathWithParam, params) =
-              path.trim match {
-                //TODO: get rid of this branch
+              cleanPath match {
+                //TODO: get rid of this branch maybe
                 case PathParamKVExp(segments, k, v) =>
                   val pName = k.trim
                   val pathSegment = v.trim.replace("/*", "")
@@ -153,59 +159,77 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
                   println(s"*** Found kv GET " + s"$getPath" + " - " + pName)
                   (getPath, Set(pName))
                 case _ =>
-                  val matcher = PathParamsExp.pattern.matcher(path)
-                  var params = Set.empty[String]
-                  if (matcher.find()) {
-                    val param = path.substring(matcher.start(), matcher.end()).trim.replaceAll("[\\{\\}]", "")
-                    println(s"*** Found pathParam: $param")
-                    params = params + param
-                    while (matcher.find()) {
-                      val param = path.substring(matcher.start(), matcher.end()).trim.replaceAll("[\\{\\}]", "")
+                  if (PathWithNoQueryParams.matches(cleanPath)) {
+                    (cleanPath, Set.empty[String])
+                  } else {
+                    val matcher = PathParamsExp.pattern.matcher(cleanPath)
+                    var params = Set.empty[String]
+                    if (matcher.find()) {
+                      val param = cleanPath.substring(matcher.start(), matcher.end()).trim.replaceAll("[\\{\\}]", "")
                       println(s"*** Found pathParam: $param")
                       params = params + param
+                      while (matcher.find()) {
+                        val param = cleanPath.substring(matcher.start(), matcher.end()).trim.replaceAll("[\\{\\}]", "")
+                        println(s"*** Found pathParam: $param")
+                        params = params + param
+                      }
+                      // /v1/messages/{name}/a/{age}/ -> /v1/messages/:name/a/:age
+                      val a = cleanPath.replace("{", ":").replace("}", "")
+                      //remove last / if found
+                      val b = if (a.charAt(a.length-1) == '/') a.substring(0, a.length-1) else a
+                      (b, params)
+                    } else throw new Exception(s"Smth's wrong with url path ($cleanPath) !")
+                  }
+              }
+
+            serviceMethod.getInputType.getFullName match {
+              case EmptyMessage =>
+                rBuffer.append(routesGetRoute(targetControllersPackName, controllerName, pathWithParam, serviceMethod.getName))
+                cBuffer.append(controllerGetMethod(serviceMethod.getName, serviceMethod.getOutputType.getName))
+
+              case _ =>
+                val requestConstructors = Class.forName(serviceMethod.getInputType.getFullName).getConstructors
+                val requestCtrParams =
+                  requestConstructors.headOption match {
+                    case Some(ctr) =>
+                      ctr.getParameters().toSet
+                        .filterNot(_.getName == "unknownFields") //filter out unknownFields: scalapb.UnknownFieldSet
+                        .map { p => (p.getName, asPlayType(p.getType.getSimpleName)) }
+                        .toMap
+                    case None =>
+                      throw new Exception(s"${serviceMethod.getInputType.getFullName} should have one constructor")
+                  }
+
+                val pathParametersWithTyped =
+                  params.foldLeft(Map.empty[String, String]) { (acc, param) =>
+                    requestCtrParams.get(param) match {
+                      case Some(methodType) =>
+                        acc + (param -> methodType)
+                      case None =>
+                        throw new Exception(s"Couldn't find method ($param) on ${serviceMethod.getInputType.getFullName}. Check your proto schema!")
                     }
-                    // /v1/messages/{name}/a/{age} -> /v1/messages/:name/a/:age
-                    (path.replace("{", ":").replace("}", ""), params)
-                  } else throw new Exception(s"Smth's wrong with $path !")
-              }
+                  }
 
-            val requestConstructors = Class.forName(serviceMethod.getInputType.getFullName).getConstructors
-            val requestCtrParams =
-              requestConstructors.headOption match {
-                case Some(ctr) =>
-                  ctr.getParameters().toSet
-                    .filterNot(_.getName == "unknownFields") //filter out unknownFields: scalapb.UnknownFieldSet
-                    .map { p => (p.getName, asScalaType(p.getType.getSimpleName)) }
-                    .toMap
-                case None =>
-                  throw new Exception(s"${serviceMethod.getInputType.getFullName} should have one constructor")
-              }
+                // Any fields in the request message which are not bound by the path template automatically become HTTP query parameters
+                // if there is no HTTP request body !!!!
+                val queryParameters = requestCtrParams.keySet.diff(pathParametersWithTyped.keySet)
+                val queryParametersWithTypes = queryParameters.map(p => p -> requestCtrParams(p)).toMap
 
-            val pathParametersWithTyped =
-              params.foldLeft(Map.empty[String, String]) { (acc, param) =>
-                requestCtrParams.get(param) match {
-                  case Some(methodType) =>
-                    acc + (param -> methodType)
-                  case None =>
-                    throw new Exception(s"Couldn't find method ($param) on ${serviceMethod.getInputType.getFullName}. Check your proto schema!")
-                }
-              }
+                rBuffer.append(routesGetRoute(
+                  targetControllersPackName, controllerName, pathWithParam, serviceMethod.getName, pathParametersWithTyped, queryParametersWithTypes))
 
-            // Any fields in the request message which are not bound by the path template automatically become HTTP query parameters
-            // if there is no HTTP request body !!!!
-            val queryParameters = requestCtrParams.keySet.diff(pathParametersWithTyped.keySet)
-            val queryParametersWithTypes = queryParameters.map(p => p -> requestCtrParams(p)).toMap
-
-            rBuffer.append(routesGetRoute(
-              targetControllersPackName, controllerName, pathWithParam, serviceMethod.getName, pathParametersWithTyped, queryParametersWithTypes))
-
-            cBuffer.append(cntrlGetMethod(
-              serviceMethod.getName, pathParametersWithTyped, queryParametersWithTypes, serviceMethod.getOutputType.getName))
+                cBuffer.append(controllerGetMethod(
+                  serviceMethod.getName, serviceMethod.getOutputType.getName, pathParametersWithTyped, queryParametersWithTypes))
+            }
 
           case Pattern.Post(path) =>
+            println(s"*** POST ${path.trim}")
             ???
 
-          case Pattern.Put(path) => ???
+          case Pattern.Put(path) =>
+            println(s"*** POST ${path.trim}")
+            ???
+
           case Pattern.Delete(path) => ???
           case Pattern.Patch(path) => ???
           case Pattern.Custom(path) => ???
@@ -218,7 +242,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
       }
     }
 
-    cBuffer.append(cntrFooter())
+    cBuffer.append(controllerFooter())
     rBuffer.append(routesFooter(targetControllersPackName))
 
     //TODO: consider writing in chunks
