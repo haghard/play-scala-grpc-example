@@ -18,9 +18,17 @@ trait PlayRoutesScaffolding {
        |
        |""".stripMargin
 
-  def routesRoute(cntPkgName: String, controllerName: String, method: String): String =
+  def routesPostRoute(cntPkgName: String, controllerName: String, path: String, method: String): String =
     s"""
-       |POST  /$method  $cntPkgName.$controllerName.$method()
+       |POST  $path  $cntPkgName.$controllerName.$method()
+       |
+       |""".stripMargin
+
+
+  def routesGetRoute(cntPkgName: String, controllerName: String, path: String, method: String,
+    pathParams: Map[String, String], queryParams: Map[String, String]): String =
+    s"""
+       |GET $path  $cntPkgName.$controllerName.$method(${pathParams.map { case (param, tp) => s"$param: $tp" }.mkString(", ")}, ${queryParams.map { case (param, tp) => s"$param: $tp" }.mkString(", ")})
        |
        |""".stripMargin
 

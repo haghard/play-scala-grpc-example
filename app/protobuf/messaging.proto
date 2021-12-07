@@ -1,0 +1,87 @@
+syntax = "proto3";
+
+import "scalapb/scalapb.proto";
+
+
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+import "google/api/annotations.proto";
+
+package example.messaging;
+
+option java_package = "example.messaging";
+
+// Each mapping specifies a URL path template and an HTTP method. The path
+// template may refer to one or more fields in the gRPC request message, as long
+// as each field is a non-repeated field with a primitive (non-message) type.
+// The path template controls how fields of the request message are mapped to
+// the URL path.
+//
+
+service Messaging {
+
+  rpc GetMessage(GetMessageRequest) returns (Message) {
+    option (google.api.http) = {
+      //get: "/v1/messages/{name}"
+      get: "/v1/messages/{name}/age/{age}"
+    };
+  }
+
+  rpc GetMessage2(GetMessageRequest) returns (Message) {
+    option (google.api.http) = {
+      get: "/v1/{name=messages/*}"
+    };
+  }
+
+}
+
+message GetMessageRequest {
+  string name = 1; // Mapped to URL path.
+  int32 age = 2; // Mapped to URL path.
+  int32 weight = 3; // as a query param.
+  bool status = 4; // as a query param.
+}
+
+message Message {
+  string text = 1; // The resource content.
+}
+
+
+// This enables an HTTP REST to gRPC mapping as below:
+//
+// HTTP                       | gRPC
+//                            |
+// `GET /v1/messages/123456`  | `GetMessage(name: "messages/123456")`
+//
+
+
+// Any fields in the request message which are not bound by the path template
+// automatically become HTTP query parameters if there is no HTTP request body.
+// For example:
+//
+//    service Messaging {
+//       rpc GetMessage(GetMessageRequest) returns (Message) {
+//         option (google.api.http) = {
+//             get:"/v1/messages/{message_id}"
+//         };
+//       }
+//     }
+//     message GetMessageRequest {
+//       message SubMessage {
+//         string subfield = 1;
+//       }
+//       string message_id = 1; // Mapped to URL path.
+//       int64 revision = 2;    // Mapped to URL query parameter `revision`.
+//       SubMessage sub = 3;    // Mapped to URL query parameter `sub.subfield`.
+//     }
+
+// This enables a HTTP JSON to RPC mapping as below:
+//
+// HTTP | gRPC
+// -----|-----
+// `GET /v1/messages/123456?revision=2&sub.subfield=foo` |
+
+// `GetMessage(message_id: "123456" revision: 2 sub: SubMessage(subfield:
+// "foo"))`
+//

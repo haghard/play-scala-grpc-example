@@ -57,8 +57,10 @@ val CompileDeps = Seq(
   "com.typesafe.akka" %% "akka-http2-support"   %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
 
+
   "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.0",
-  "org.reflections" % "reflections" % "0.10.2",
+  "org.reflections"      % "reflections"     % "0.10.2",
+
   
   //current: 3.11.4
   //"com.google.protobuf" % "protobuf-java-util" % "3.19.1",
@@ -82,7 +84,7 @@ val genPlayArtifacts = taskKey[Unit]("Generate Play artifacts (routes and contro
 
 genPlayArtifacts := Def.taskDyn {
 
-  // standart Play project paths
+  // standard Play project paths
   val defaultAppFolder = "./app"
   val defaultConfFolder = "./conf"
   val defaultProtobufFolder = "./app/protobuf"
@@ -106,10 +108,9 @@ genPlayArtifacts := Def.taskDyn {
   val javaHome = sys.env("JAVA_HOME")
   val input = ${classesTargetDir.absolutePath}#${protobufDir.absolutePath}#${appfDir.getAbsolutePath}
   val code = scala.sys.process.Process(Seq(s"$javaHome/bin/java", "-jar", "gateway.jar", input)).!
-  println(s"keytool return code: $code")
+  println(s"return code: $code")
   if (code == 0) println(s"XXX has been generated") else println("Oooops something went wrong!")
   */
-
 }.value
 
 addCommandAlias("c", "compile")

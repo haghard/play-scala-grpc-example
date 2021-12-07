@@ -2,7 +2,7 @@ package gateway
 
 trait PlayControllerScaffolding {
 
-  def cntrHeader(cntPkgName: String, packageName: String, controllerName: String): String =
+  def cntrPostHeader(cntPkgName: String, packageName: String, controllerName: String): String =
     s"""package $cntPkgName
        |
        |import com.typesafe.config.Config
@@ -35,7 +35,7 @@ trait PlayControllerScaffolding {
        |
       """.stripMargin
 
-  def cntrlMethod(methodName: String, request: String, response: String): String =
+  def cntrlPostMethod(methodName: String, request: String, response: String): String =
     s"""
        | def $methodName () = Action.async { implicit req =>
        |   val f: Future[Result] = Future {
@@ -46,6 +46,18 @@ trait PlayControllerScaffolding {
        |     Ok(reply.toProtoString)
        |   }
        |   f
+       | }
+       |""".stripMargin
+
+  def cntrlGetMethod(
+    methodName: String, pathParams: Map[String, String],
+    queryParams: Map[String, String], response: String): String =
+    s"""
+       | def $methodName (${pathParams.map { case (m, t) => s"$m: $t" }.mkString(", ")}, ${queryParams.map { case (m, t) => s"$m: $t" }.mkString(", ")}) = Action { implicit req =>
+       |   val r: $response = ???
+       |
+       |   Ok(r.toProtoString)
+       | 
        | }
        |""".stripMargin
 

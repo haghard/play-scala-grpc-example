@@ -4,8 +4,10 @@ import "scalapb/scalapb.proto";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/any.proto";
 import "google/protobuf/timestamp.proto";
-import "google/api/annotations.proto";
 
+//https://github.com/googleapis/googleapis/blob/master/google/api/annotations.proto
+//https://github.com/googleapis/googleapis/blob/master/google/api/http.proto
+import "google/api/annotations.proto";
 
 package example.helloworld.service;
 
@@ -25,7 +27,7 @@ service GreeterService {
     option (google.api.http) = {
       post: "/v1/sayHello"
       body: "*"
-   };
+    };
   }
 
   //post
@@ -37,12 +39,12 @@ service GreeterService {
     };
   }
 
-  rpc sayHello3(UpdateMessageRequest) returns (Message) {
-    option (google.api.http) = {
-      patch: "/v1/messages/{message_id}"
-      body: "message"
-    };
-  }
+  //rpc sayHello3(UpdateMessageRequest) returns (Message) {
+  //  option (google.api.http) = {
+  //      patch: "/v1/messages/{message_id}"
+  //    body: "message"
+  //  };
+  //}
 
   //If you want to create an endpoint that takes no parameters or produces no response, it might be tempting to use the Empty type as defined by Google in their empty.proto.
   //rpc healthCheck(Empty) returns (HealthCheckStatus) {}
