@@ -31,10 +31,14 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
   val PathParamKVExp = """(.+)\{(.+)=(.+)\}""".r
 
   /**
-   * 
+   *
    * (e.g. /v1/messages/{name}, /v1/messages/{name}/age/{age}
    */
   val PathParamsExp = """\{(.*?)}""".r
+
+
+  //https://www.geeksforgeeks.org/check-if-an-url-is-valid-or-not-using-regular-expression/
+  val UrlExp = "((http|https)://)(www.)?[a-zA-Z0-9@:%._\\+~#?&//=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%._\\+~#?&//=]*)"
 
   val EmptyMessage = com.google.protobuf.Empty.getDescriptor.getFullName
 
@@ -170,17 +174,17 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
                     var params = Set.empty[String]
                     if (matcher.find()) {
                       val param = cleanPath.substring(matcher.start(), matcher.end()).trim.replaceAll("[\\{\\}]", "")
-                      println(s"*** Found pathParam: $param")
+                      //println(s"*** Found pathParam: $param")
                       params = params + param
                       while (matcher.find()) {
                         val param = cleanPath.substring(matcher.start(), matcher.end()).trim.replaceAll("[\\{\\}]", "")
-                        println(s"*** Found pathParam: $param")
+                        //println(s"*** Found pathParam: $param")
                         params = params + param
                       }
                       // /v1/messages/{name}/a/{age}/ -> /v1/messages/:name/a/:age
                       val a = cleanPath.replace("{", ":").replace("}", "")
                       //remove last "/" if found
-                      val b = if (a.charAt(a.length-1) == '/') a.substring(0, a.length-1) else a
+                      val b = if (a.charAt(a.length - 1) == '/') a.substring(0, a.length - 1) else a
                       (b, params)
                     } else throw new Exception(s"Smth's wrong with url path ($cleanPath) !")
                   }
@@ -200,7 +204,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
                         .filterNot(_.getName == "unknownFields") //filter out unknownFields: scalapb.UnknownFieldSet
                         .map { p =>
                           val pType = p.getType.getSimpleName
-                          if(supportedTypes.contains(pType)) (p.getName, asPlayType(pType))
+                          if (supportedTypes.contains(pType)) (p.getName, asPlayType(pType))
                           else throw new Exception(s"Found unsupported type $pType in ${serviceMethod.getInputType.getFullName}.${p.getName}")
                         }
                         .toMap
@@ -223,6 +227,14 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
                 val queryParameters = requestCtrParams.keySet.diff(pathParametersWithTyped.keySet)
                 val queryParametersWithTypes = queryParameters.map(p => p -> requestCtrParams(p)).toMap
 
+                pathParametersWithTyped.foreach { case (p, t) =>
+                  println(s"*** Found type param: $p : $t")
+                }
+
+                queryParametersWithTypes.foreach { case (p, t) =>
+                  println(s"*** Found query param: $p : $t")
+                }
+
                 rBuffer.append(routesGetRoute(
                   targetControllersPackName, controllerName, pathWithParam, serviceMethod.getName, pathParametersWithTyped, queryParametersWithTypes))
 
@@ -234,12 +246,16 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
             println(s"*** POST ${path.trim}")
             ???
 
+          case Pattern.Patch(path) => ???
+            println(s"*** PATCH ${path.trim}")
+            ???
+
           case Pattern.Put(path) =>
-            println(s"*** POST ${path.trim}")
+            println(s"*** PUT ${path.trim}")
             ???
 
           case Pattern.Delete(path) => ???
-          case Pattern.Patch(path) => ???
+
           case Pattern.Custom(path) => ???
           case Pattern.Empty => ???
         }

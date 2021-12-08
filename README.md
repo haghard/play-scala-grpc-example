@@ -27,3 +27,10 @@ http --verbose GET ":8080/download"
 http --verbose GET ":8080/helloworld"
   
 ```  
+
+
+
+Notes about types
+
+https://www.playframework.com/documentation/2.8.x/ScalaRouting#The-routes-file-syntax
+Play supports the following Parameter Types: String, Int, Long, Double, Float, Boolean, UUID, AnyVal wrappers for other supported types.
