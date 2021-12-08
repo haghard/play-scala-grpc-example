@@ -9,6 +9,8 @@ import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 import "google/api/httpbody.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/field_mask.proto";
 
 package example.messaging;
 
@@ -20,6 +22,16 @@ option java_package = "example.messaging";
 // The path template controls how fields of the request message are mapped to
 // the URL path.
 //
+
+
+/*
+https://blog.knoldus.com/protobuf-new-way-of-serialization/
+message Address {
+  required int32 postbox = 1;
+  optional string street = 2;
+  string city = 3;
+}
+*/
 
 service Messaging {
 
@@ -65,11 +77,21 @@ service Messaging {
   // }
 }
 
+// DynamicMessage represents a message which can have its structure built dynamically using Struct and Values.
+message DynamicMessage {
+	google.protobuf.Struct struct = 1;
+	google.protobuf.Value value= 2;
+  google.protobuf.FieldMask update_mask = 3;
+}
+
 message GetMessageRequest {
   string name = 1;  // Mapped to URL path.
   int32 age = 2;    // Mapped to URL path.
   int32 weight = 3; // Mapped to URL query parameter `weight`.
+  //google.protobuf.Struct struct_field = 4;
   bool status = 4;  // Mapped to URL query parameter `status`.
+
+  //google.protobuf.Timestamp when = 4; //Mapped to URL query parameter `when`.
 }
 
 message Message {

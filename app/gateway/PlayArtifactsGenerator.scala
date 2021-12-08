@@ -45,6 +45,10 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
   //Looks like it's a stable invariant.
   val sdClass = classOf[akka.grpc.ServiceDescription]
 
+  //Support only primitives (non-message) type
+  val supportedTypes = Set(classOf[String].getSimpleName, classOf[Int].getSimpleName, classOf[Long].getSimpleName,
+    classOf[Boolean].getSimpleName, classOf[Double].getSimpleName)
+
   def asPlayType(protoType: String): String =
     protoType.charAt(0).toUpper.toString + protoType.substring(1)
 
@@ -175,7 +179,7 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
                       }
                       // /v1/messages/{name}/a/{age}/ -> /v1/messages/:name/a/:age
                       val a = cleanPath.replace("{", ":").replace("}", "")
-                      //remove last / if found
+                      //remove last "/" if found
                       val b = if (a.charAt(a.length-1) == '/') a.substring(0, a.length-1) else a
                       (b, params)
                     } else throw new Exception(s"Smth's wrong with url path ($cleanPath) !")
@@ -194,7 +198,11 @@ object PlayArtifactsGenerator extends App with PlayControllerScaffolding with Pl
                     case Some(ctr) =>
                       ctr.getParameters().toSet
                         .filterNot(_.getName == "unknownFields") //filter out unknownFields: scalapb.UnknownFieldSet
-                        .map { p => (p.getName, asPlayType(p.getType.getSimpleName)) }
+                        .map { p =>
+                          val pType = p.getType.getSimpleName
+                          if(supportedTypes.contains(pType)) (p.getName, asPlayType(pType))
+                          else throw new Exception(s"Found unsupported type $pType in ${serviceMethod.getInputType.getFullName}.${p.getName}")
+                        }
                         .toMap
                     case None =>
                       throw new Exception(s"${serviceMethod.getInputType.getFullName} should have one constructor")

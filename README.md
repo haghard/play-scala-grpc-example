@@ -20,7 +20,6 @@ run
  
 ```
 
-
 http --verbose GET ":8080/v1/messages/jack/age/2?weight=11&status=true"
 http --verbose GET ":8080/v1/messages2/jack?age=123&weight=11&status=true"
 
