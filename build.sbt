@@ -60,12 +60,7 @@ val CompileDeps = Seq(
   "com.typesafe.akka" %% "akka-http-spray-json" %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
 
   "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.0",
-  "org.reflections"      % "reflections"     % "0.10.2",
-
-  //current: 3.11.4
-  //"com.google.protobuf" % "protobuf-java-util" % "3.19.1",
-  //"com.google.protobuf" % "protobuf-java"      % "3.19.1",
-  //"com.lihaoyi" % "ammonite" % "2.4.1" % "test" cross CrossVersion.full,
+  //"org.reflections"      % "reflections"     % "0.10.2",
 
   // Test Database
   "com.h2database" % "h2" % "1.4.199"
