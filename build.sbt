@@ -1,6 +1,6 @@
 import play.core.PlayVersion.akkaVersion
 import play.core.PlayVersion.akkaHttpVersion
-import play.grpc.gen.scaladsl.{PlayScalaClientCodeGenerator, PlayScalaServerCodeGenerator}
+import play.grpc.gen.scaladsl.{PlayScalaClientCodeGenerator, PlayScalaServerCodeGenerator, PlayScalaHttpServiceCodeGenerator}
 import com.typesafe.sbt.packager.docker.{Cmd, CmdLike, DockerAlias, ExecCmd}
 import play.core.PlayVersion
 import play.scala.grpc.sample.BuildInfo
@@ -8,22 +8,23 @@ import play.scala.grpc.sample.BuildInfo
 name := "play-scala-grpc-example"
 version := "1.0-SNAPSHOT"
 
-
 lazy val `play-scala-grpc-example` = (project in file("."))
   .enablePlugins(PlayScala)
   .enablePlugins(AkkaGrpcPlugin) // enables source generation for gRPC
   //.enablePlugins(PlayAkkaHttp2Support) // enables serving HTTP/2 and gRPC
   // #grpc_play_plugins
   .settings(
-    akkaGrpcGeneratedLanguages := Seq(AkkaGrpc.Scala),
+    //akkaGrpcGeneratedLanguages := Seq(AkkaGrpc.Scala),
     // #grpc_client_generators
     // build.sbt
-    akkaGrpcExtraGenerators += PlayScalaClientCodeGenerator,
+    //akkaGrpcExtraGenerators += PlayScalaClientCodeGenerator,
     // #grpc_client_generators
     // #grpc_server_generators
     // build.sbt
     akkaGrpcExtraGenerators += PlayScalaServerCodeGenerator,
     // #grpc_server_generators
+    akkaGrpcExtraGenerators += PlayScalaHttpServiceCodeGenerator,
+
     PlayKeys.devSettings ++= Seq(
       "play.server.http.port" -> "8080"
     )
@@ -48,20 +49,19 @@ lazy val `play-scala-grpc-example` = (project in file("."))
 val akkaHttpVer = "10.2.7"
 val CompileDeps = Seq(
   guice,
+
   "com.lightbend.play" %% "play-grpc-runtime" % BuildInfo.playGrpcVersion, //0.9.1
+
   "com.typesafe.akka"  %% "akka-discovery" % PlayVersion.akkaVersion,
   "com.typesafe.akka"  %% "akka-http" % PlayVersion.akkaHttpVersion,
-
 
   //You can solve this by adding an explicit dependency on version 10.2.7 of the [akka-http-spray-json, akka-http2-support] artifacts to your project.
   "com.typesafe.akka" %% "akka-http2-support"   %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
   "com.typesafe.akka" %% "akka-http-spray-json" %  akkaHttpVer, //PlayVersion.akkaHttpVersion,
 
-
   "com.thesamet.scalapb" %% "scalapb-json4s" % "0.11.0",
   "org.reflections"      % "reflections"     % "0.10.2",
 
-  
   //current: 3.11.4
   //"com.google.protobuf" % "protobuf-java-util" % "3.19.1",
   //"com.google.protobuf" % "protobuf-java"      % "3.19.1",
@@ -79,6 +79,8 @@ val TestDeps = Seq(
   "com.typesafe.play" %% "play-specs2" % playVersion % Test,
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.0.0" % Test,
 )
+
+/*
 
 val genPlayArtifacts = taskKey[Unit]("Generate Play artifacts (routes and controllers) using gRPC definition")
 
@@ -112,6 +114,7 @@ genPlayArtifacts := Def.taskDyn {
   if (code == 0) println(s"XXX has been generated") else println("Oooops something went wrong!")
   */
 }.value
+*/
 
 addCommandAlias("c", "compile")
 

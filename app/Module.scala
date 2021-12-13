@@ -10,6 +10,10 @@ import com.google.inject.AbstractModule
  * adding `play.modules.enabled` settings to the `application.conf`
  * configuration file.
  */
+
 class Module extends AbstractModule {
-  override def configure(): Unit = {}
+
+  override def configure(): Unit = {
+    //bind(classOf[MessagingGrpcService]).to(classOf[MessagingGrpcServiceImpl])
+  }
 }

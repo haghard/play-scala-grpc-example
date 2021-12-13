@@ -7,6 +7,9 @@ import "google/protobuf/timestamp.proto";
 
 //https://github.com/googleapis/googleapis/blob/master/google/api/annotations.proto
 //https://github.com/googleapis/googleapis/blob/master/google/api/http.proto
+
+//https://github.com/googleapis/googleapis/blob/master/google/api/field_behaviour.proto
+
 import "google/api/annotations.proto";
 
 package example.helloworld.service;

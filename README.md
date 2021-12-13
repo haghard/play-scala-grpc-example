@@ -1,36 +1,18 @@
 # Notes
 
-POC that generates `routes` file and a Play controller from a protobuf definition file.
 
+Generated routes based on ./app/protibuf/messaging.proto schema.
 
-## Now it supposed to work. Steps
-
-1. We start with an empty Play project that has support for `play-grpc-generators` and `akka-grpc`.
-2. 
-3. Invoke
-```
-
-genPlayArtifacts
-compile
-run 
-
-```
-
-3. These should go through 
  
 ```
 
-http --verbose GET ":8080/v1/messages/jack/age/2?weight=11&status=true"
-http --verbose GET ":8080/v1/messages2/jack?age=123&weight=11&status=true"
+http --verbose GET ":8080/v1/messages/jack/age/1?weight=11&status=true&height=3456"
+http --verbose GET ":8080/v1/messages/jack?age=123&weight=11&status=true&height=3456"
+http --verbose GET ":8080/v1/messages2/jack?age=123&weight=11&status=true&height=3456"
 
-http --verbose GET ":8080/download"
-http --verbose GET ":8080/helloworld"
+
+http --verbose POST :8080/v1/messages  authorId="alice" regionId=1 text=adfgadfg when=1323
+http --verbose POST :8080/v1/messages/alice/region/1 authorId="alice" regionId=1 text=adfgadfg when=1323                   
+
   
-```  
-
-
-
-Notes about types
-
-https://www.playframework.com/documentation/2.8.x/ScalaRouting#The-routes-file-syntax
-Play supports the following Parameter Types: String, Int, Long, Double, Float, Boolean, UUID, AnyVal wrappers for other supported types.
+```
